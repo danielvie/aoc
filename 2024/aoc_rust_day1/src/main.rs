@@ -4,7 +4,7 @@ enum FileChoice {
     Run,
 }
 
-fn parse_puzzle(puzzle: &str) -> (Vec<i32>, Vec<i32>) {
+fn parse_data(puzzle: &str) -> (Vec<i32>, Vec<i32>) {
     let mut left = vec![];
     let mut right = vec![];
     
@@ -19,12 +19,12 @@ fn parse_puzzle(puzzle: &str) -> (Vec<i32>, Vec<i32>) {
 }
 
 fn run(choice: FileChoice) {
-    let puzzle = match choice {
-        FileChoice::Test => include_str!("../puzzle/test.txt"),
-        FileChoice::Run => include_str!("../puzzle/list.txt")
+    let datafile = match choice {
+        FileChoice::Test => include_str!("../data/test.txt"),
+        FileChoice::Run => include_str!("../data/list.txt")
     };
 
-    let (mut left, mut right) = parse_puzzle(puzzle);
+    let (mut left, mut right) = parse_data(datafile);
     
     // sorting arrays
     left.sort();
@@ -52,5 +52,9 @@ fn main() {
     run(FileChoice::Test);
 
     println!("\nRun:");
+    let start_time = std::time::Instant::now();
     run(FileChoice::Run);
+    let duration = start_time.elapsed();
+    
+    println!("\ntime taken duration_run: {:?}", duration);
 }

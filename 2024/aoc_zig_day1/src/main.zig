@@ -72,8 +72,8 @@ fn part2(left_values: *std.ArrayList(i32), right_values: *std.ArrayList(i32)) u3
 fn run(choice: FileChoice) !struct { distance: u32, similarity: u32 } {
     // Open the file
     const filename = switch (choice) {
-        .TEST => "ref.txt",
-        .RUN => "list.txt",
+        .TEST => "./data/test.txt",
+        .RUN => "./data/list.txt",
     };
 
     // Allocator for dynamic memory
@@ -112,8 +112,14 @@ pub fn main() !void {
     std.debug.print("distance: {}\n", .{result_test.distance});
     std.debug.print("similarity: {}\n", .{result_test.similarity});
 
+    const start_time = std.time.nanoTimestamp();
     const result_run = try run(FileChoice.RUN);
+    const end_time = std.time.nanoTimestamp();
+    const duration = @as(f32, @floatFromInt(end_time - start_time)) / 1000_000.0;
+
     std.debug.print("\nlist:\n", .{});
     std.debug.print("distance: {}\n", .{result_run.distance});
     std.debug.print("similarity: {}\n", .{result_run.similarity});
+
+    std.debug.print("\nduration_run: {d:.3} ms\n", .{duration});
 }
