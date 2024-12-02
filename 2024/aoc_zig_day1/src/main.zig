@@ -1,7 +1,5 @@
 const std = @import("std");
 
-// ownerproof-4405414-1733076025-efe34aa2587d
-
 pub const FileChoice = enum { TEST, RUN };
 
 fn readFileValues(allocator: std.mem.Allocator, file_path: []const u8) !struct { left_values: std.ArrayList(i32), right_values: std.ArrayList(i32) } {
@@ -44,39 +42,28 @@ fn readFileValues(allocator: std.mem.Allocator, file_path: []const u8) !struct {
     };
 }
 
-fn part1(left_values: *std.ArrayList(i32), right_values: *std.ArrayList(i32)) !void {
-    std.debug.print("\n\n============================\n", .{});
-    std.debug.print("part1: \n\n", .{});
-
+fn part1(left_values: *std.ArrayList(i32), right_values: *std.ArrayList(i32)) u32 {
     var total: u32 = 0;
     for (left_values.items, right_values.items) |left, right| {
-        std.debug.print("{} {} -> ", .{ left, right });
         const distance = @abs(left - right);
-        std.debug.print("{}\n", .{distance});
         total += distance;
     }
 
-    std.debug.print("\ntotal: {}\n", .{total});
+    return total;
 }
 
-fn part2(left_values: *std.ArrayList(i32), right_values: *std.ArrayList(i32)) !void {
-    std.debug.print("\n\n============================\n", .{});
-    std.debug.print("part2: \n\n", .{});
-
+fn part2(left_values: *std.ArrayList(i32), right_values: *std.ArrayList(i32)) u32 {
     // compute similarity score
     var left_: i32 = -1;
     var count_: u32 = 0;
     var similarity: u32 = 0;
 
-    std.debug.print("find the similarity:\n", .{});
     for (left_values.items) |left| {
         // if the left is the same as before, we dont need to search again
         if (left_ == left) {
             similarity += @abs(left) * count_;
             continue;
         }
-
-        std.debug.print("{} ", .{left});
 
         var count: u32 = 0;
         for (right_values.items) |right| {
@@ -93,13 +80,12 @@ fn part2(left_values: *std.ArrayList(i32), right_values: *std.ArrayList(i32)) !v
 
         left_ = left;
         count_ = count;
-        std.debug.print("..> {}\n", .{count});
     }
 
-    std.debug.print("resulted similarity:: {}", .{similarity});
+    return similarity;
 }
 
-fn run(choice: FileChoice) !void {
+fn run(choice: FileChoice) !struct { distance: u32, similarity: u32 } {
     // Open the file
     const filename = switch (choice) {
         .TEST => "ref.txt",
@@ -126,11 +112,23 @@ fn run(choice: FileChoice) !void {
     std.mem.sort(i32, sorted_right_values.items, {}, std.sort.asc(i32));
 
     // running exercices
-    try part1(&sorted_left_values, &sorted_right_values);
-    try part2(&sorted_left_values, &sorted_right_values);
+    const distance: u32 = part1(&sorted_left_values, &sorted_right_values);
+    const similarity: u32 = part2(&sorted_left_values, &sorted_right_values);
+
+    return .{
+        .distance = distance,
+        .similarity = similarity,
+    };
 }
 
 pub fn main() !void {
-    const c = FileChoice.TEST;
-    try run(c);
+    const result_test = try run(FileChoice.TEST);
+    std.debug.print("test:\n", .{});
+    std.debug.print("distance: {}\n", .{result_test.distance});
+    std.debug.print("similarity: {}\n", .{result_test.similarity});
+
+    const result_run = try run(FileChoice.TEST);
+    std.debug.print("\nlist:\n", .{});
+    std.debug.print("distance: {}\n", .{result_run.distance});
+    std.debug.print("similarity: {}\n", .{result_run.similarity});
 }
