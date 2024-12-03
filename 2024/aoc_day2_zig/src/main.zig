@@ -137,8 +137,12 @@ fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
     }
 
     // Part1
+    const start_time = std.time.nanoTimestamp();
     const numel_is_safe = part1(&levels);
     const numel_is_safe_damped = part2(&levels);
+    const end_time = std.time.nanoTimestamp();
+    const duration = @as(f32, @floatFromInt(end_time - start_time)) / 1_000_000.0;
+    std.debug.print("duration w/ read: {} ms", .{duration});
 
     return .{
         .a = numel_is_safe,
