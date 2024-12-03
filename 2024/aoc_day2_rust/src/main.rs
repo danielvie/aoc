@@ -49,7 +49,7 @@ fn is_save(level: &Vec<i32>) -> bool {
     return is_inc || is_dec;
 }
 
-fn is_saver(level: &Vec<i32>) -> bool {
+fn is_save_damped(level: &Vec<i32>) -> bool {
 
     if is_save(level) {
         return true;
@@ -82,22 +82,10 @@ fn run(choice: FileChoice) {
     
     // compute safer (PART2)
     let safer_reports: u32 = levels.iter()
-            .map(|l| is_saver(&l) as u32)
+            .map(|l| is_save_damped(&l) as u32)
             .sum();
-
     
-    println!("safer reports: {}", safer_reports);
-    
-    // println!("distance: {}", distance);
-
-    // // compute similarity (PART2)
-    // let similarity: i32 = left.iter()
-    //     .map(|l| {
-    //         l * (right.iter().filter(|r| l == *r).count() as i32)
-    //     }).sum();
-        
-    // println!("similarity: {}", similarity);
-    
+    println!("safe damped reports: {}", safer_reports);
 }
 
 fn main() {
@@ -105,10 +93,9 @@ fn main() {
     run(FileChoice::Test);
 
     println!("\nRun:");
+    let start_time = std::time::Instant::now();
     run(FileChoice::Run);
+    let duration = start_time.elapsed();
 
-    // let start_time = std::time::Instant::now();
-    // let duration = start_time.elapsed();
-    // println!("\ntime taken duration_run: {:?}", duration);
-    
+    println!("\ntime taken duration_run: {:?}", duration);
 }

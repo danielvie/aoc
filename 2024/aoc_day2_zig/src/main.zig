@@ -1,7 +1,6 @@
 const std = @import("std");
 
 pub const FileChoice = enum { TEST, RUN };
-pub const Direction = enum { INC, DEC };
 
 fn readFileValues(allocator: std.mem.Allocator, file_path: []const u8) !std.ArrayList((std.ArrayList(i32))) {
     // Open the file
@@ -41,49 +40,40 @@ fn readFileValues(allocator: std.mem.Allocator, file_path: []const u8) !std.Arra
     return sequences;
 }
 
-fn _is_save(level: *const std.ArrayList(i32)) bool {
+fn is_save(level: *const std.ArrayList(i32)) bool {
 
-    // if there is not enough elements, send false
+    // if the length of the array is 1, return false
     if (level.items.len == 1) {
         return false;
     }
 
-    var dir = Direction.INC;
-    var n_ = level.items[0] - 1;
-
-    if (level.items[1] - level.items[0] < 0) {
-        dir = Direction.DEC;
-        n_ += 2;
+    // check increasing
+    var is_inc = true;
+    for (level.items[0 .. level.items.len - 1], 0..) |val, i| {
+        const diff = level.items[i + 1] - val;
+        if ((diff < 0 or diff < 1 or diff > 3)) {
+            is_inc = false;
+            break;
+        }
     }
 
-    switch (dir) {
-        .INC => {
-            for (level.items) |n| {
-                const diff = n - n_;
-                if (diff < 1 or diff > 3) {
-                    return false;
-                }
-                n_ = n;
-            }
-        },
-        .DEC => {
-            for (level.items) |n| {
-                const diff = n - n_;
-                if (diff > -1 or diff < -3) {
-                    return false;
-                }
-                n_ = n;
-            }
-        },
+    // check decreasing
+    var is_dec = true;
+    for (level.items[0 .. level.items.len - 1], 0..) |val, i| {
+        const diff = level.items[i + 1] - val;
+        if ((diff > 0 or diff < -3 or diff > -1)) {
+            is_dec = false;
+            break;
+        }
     }
 
-    return true;
+    // Return true if either increasing or decreasing sequence is found
+    return is_inc or is_dec;
 }
 
-fn _is_save_damped(level: *const std.ArrayList(i32)) bool {
-
+fn is_save_damped(level: *const std.ArrayList(i32)) bool {
     // if all elements is save, then it is true
-    if (_is_save(level)) {
+    if (is_save(level)) {
         return true;
     }
 
@@ -95,8 +85,7 @@ fn _is_save_damped(level: *const std.ArrayList(i32)) bool {
         _ = level_.orderedRemove(i);
 
         // if any condition is save, then it is true
-        const res = _is_save(&level_);
-        if (res) {
+        if (is_save(&level_)) {
             return true;
         }
     }
@@ -109,7 +98,7 @@ fn part1(levels: *const std.ArrayList(std.ArrayList(i32))) u32 {
     var count: u32 = 0;
 
     for (levels.items) |level| {
-        count += if (_is_save(&level)) 1 else 0;
+        count += if (is_save(&level)) 1 else 0;
     }
 
     return count;
@@ -119,7 +108,7 @@ fn part2(levels: *const std.ArrayList(std.ArrayList(i32))) u32 {
     var count: u32 = 0;
 
     for (levels.items) |level| {
-        count += if (_is_save_damped(&level)) 1 else 0;
+        count += if (is_save_damped(&level)) 1 else 0;
         // std.debug.print("numel: {}\n", .{level.items.len});
     }
 
@@ -147,14 +136,6 @@ fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
         levels.deinit();
     }
 
-    // Print the levels
-    // for (levels.items) |level| {
-    //     for (level.items) |num| {
-    //         std.debug.print("{} ", .{num});
-    //     }
-    //     std.debug.print("\n", .{});
-    // }
-
     // Part1
     const numel_is_safe = part1(&levels);
     const numel_is_safe_damped = part2(&levels);
@@ -172,9 +153,15 @@ pub fn main() !void {
     std.debug.print("a: {}\n", .{result_1.a});
     std.debug.print("b: {}\n", .{result_1.b});
 
+    const start_time = std.time.nanoTimestamp();
     const result_2 = try run(FileChoice.RUN);
+    const end_time = std.time.nanoTimestamp();
+    const duration = end_time - start_time;
+
     std.debug.print("\n", .{});
     std.debug.print("run:\n", .{});
     std.debug.print("a: {}\n", .{result_2.a});
     std.debug.print("b: {}\n", .{result_2.b});
+
+    std.debug.print("duration: {d:.3} ms", .{@as(f32, @floatFromInt(duration)) / 1_000_000.0});
 }
