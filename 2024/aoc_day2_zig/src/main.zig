@@ -40,7 +40,7 @@ fn readFileValues(allocator: std.mem.Allocator, file_path: []const u8) !std.Arra
     return sequences;
 }
 
-fn is_save(level: *const std.ArrayList(i32)) bool {
+fn is_safe(level: *const std.ArrayList(i32)) bool {
 
     // if the length of the array is 1, return false
     if (level.items.len == 1) {
@@ -71,9 +71,9 @@ fn is_save(level: *const std.ArrayList(i32)) bool {
     return is_inc or is_dec;
 }
 
-fn is_save_damped(level: *const std.ArrayList(i32)) bool {
+fn is_safe_damped(level: *const std.ArrayList(i32)) bool {
     // if all elements is save, then it is true
-    if (is_save(level)) {
+    if (is_safe(level)) {
         return true;
     }
 
@@ -85,7 +85,7 @@ fn is_save_damped(level: *const std.ArrayList(i32)) bool {
         _ = level_.orderedRemove(i);
 
         // if any condition is save, then it is true
-        if (is_save(&level_)) {
+        if (is_safe(&level_)) {
             return true;
         }
     }
@@ -98,7 +98,7 @@ fn part1(levels: *const std.ArrayList(std.ArrayList(i32))) u32 {
     var count: u32 = 0;
 
     for (levels.items) |level| {
-        count += if (is_save(&level)) 1 else 0;
+        count += if (is_safe(&level)) 1 else 0;
     }
 
     return count;
@@ -108,7 +108,7 @@ fn part2(levels: *const std.ArrayList(std.ArrayList(i32))) u32 {
     var count: u32 = 0;
 
     for (levels.items) |level| {
-        count += if (is_save_damped(&level)) 1 else 0;
+        count += if (is_safe_damped(&level)) 1 else 0;
         // std.debug.print("numel: {}\n", .{level.items.len});
     }
 

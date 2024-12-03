@@ -26,7 +26,7 @@ fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
     levels
 }
 
-fn is_save(level: &Vec<i32>) -> bool {
+fn is_safe(level: &Vec<i32>) -> bool {
 
     if level.len() == 1 {
         return false;
@@ -49,9 +49,9 @@ fn is_save(level: &Vec<i32>) -> bool {
     return is_inc || is_dec;
 }
 
-fn is_save_damped(level: &Vec<i32>) -> bool {
+fn is_safe_damped(level: &Vec<i32>) -> bool {
 
-    if is_save(level) {
+    if is_safe(level) {
         return true;
     }
     
@@ -60,7 +60,7 @@ fn is_save_damped(level: &Vec<i32>) -> bool {
             let mut level_ = level.clone();
             level_.remove(i);
 
-            is_save(&level_)
+            is_safe(&level_)
         })
         .any(|is_valid| is_valid)
 }
@@ -75,14 +75,14 @@ fn run(choice: FileChoice) {
     
     // compute safe (PART1)
     let safe_reports: u32 = levels.iter()
-            .map(|l| is_save(&l) as u32)
+            .map(|l| is_safe(&l) as u32)
             .sum();
 
     println!("safe reports: {}", safe_reports);
     
     // compute safer (PART2)
     let safer_reports: u32 = levels.iter()
-            .map(|l| is_save_damped(&l) as u32)
+            .map(|l| is_safe_damped(&l) as u32)
             .sum();
     
     println!("safe damped reports: {}", safer_reports);
