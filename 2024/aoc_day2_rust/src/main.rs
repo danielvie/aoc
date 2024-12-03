@@ -1,21 +1,36 @@
+use core::num;
+
 #[derive(Debug, Clone, Copy)]
 enum FileChoice {
     Test,
     Run,
 }
 
-fn parse_data(puzzle: &str) -> (Vec<i32>, Vec<i32>) {
-    let mut left = vec![];
-    let mut right = vec![];
-    
-    for line in puzzle.lines() {
-        let mut items = line.split_whitespace();
+#[derive(Debug, Clone, Copy)]
+enum Direction {
+    INC,
+    DEC,
+}
 
-        left.push(items.next().unwrap().parse().unwrap());
-        right.push(items.next().unwrap().parse().unwrap());
+fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
+    // vector to store sequences
+    let mut levels: Vec<Vec<i32>> = Vec::new();
+    
+    // split the input
+    for line in puzzle.lines() {
+
+        let level: Vec<i32> = line
+            .split_whitespace()
+            .filter_map(|n| n.parse().ok())
+            .collect();
+
+        // only add non-empty
+        if !level.is_empty() {
+            levels.push(level);
+        }
     }
     
-    (left, right)
+    levels
 }
 
 fn run(choice: FileChoice) {
@@ -24,26 +39,44 @@ fn run(choice: FileChoice) {
         FileChoice::Run => include_str!("../data/list.txt")
     };
 
-    let (mut left, mut right) = parse_data(datafile);
+    let levels = parse_data(datafile);
     
-    // sorting arrays
-    left.sort();
-    right.sort();
+    // compute safe (PART1)
+    let mut safe_reports = 0;
     
-    // compute distance (PART1)
-    let distance: i32 = std::iter::zip(&left, &right)
-        .map(|(l, r)| (l-r).abs() )
-        .sum();
-    
-    println!("distance: {}", distance);
+    for level in levels {
+        let is_inc = level
+            .windows(2)
+            .all(|le| {
+                (le[1] > le[0]) && 
+                (le[1] - le[0] >= 1) && 
+                (le[1] - le[0] <= 3)
+            });
 
-    // compute similarity (PART2)
-    let similarity: i32 = left.iter()
-        .map(|l| {
-            l * (right.iter().filter(|r| l == *r).count() as i32)
-        }).sum();
+        let is_dec = level
+            .windows(2)
+            .all(|le| {
+                (le[1] < le[0]) && 
+                (le[1] - le[0] <= -1) && 
+                (le[1] - le[0] >= -3)
+            });
         
-    println!("similarity: {}", similarity);
+        if is_inc || is_dec {
+            safe_reports += 1;
+        }
+    }
+    
+    println!("sare reports: {}", safe_reports);
+    
+    // println!("distance: {}", distance);
+
+    // // compute similarity (PART2)
+    // let similarity: i32 = left.iter()
+    //     .map(|l| {
+    //         l * (right.iter().filter(|r| l == *r).count() as i32)
+    //     }).sum();
+        
+    // println!("similarity: {}", similarity);
     
 }
 
@@ -52,9 +85,10 @@ fn main() {
     run(FileChoice::Test);
 
     println!("\nRun:");
-    let start_time = std::time::Instant::now();
     run(FileChoice::Run);
-    let duration = start_time.elapsed();
+
+    // let start_time = std::time::Instant::now();
+    // let duration = start_time.elapsed();
+    // println!("\ntime taken duration_run: {:?}", duration);
     
-    println!("\ntime taken duration_run: {:?}", duration);
 }

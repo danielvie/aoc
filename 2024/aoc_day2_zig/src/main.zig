@@ -42,6 +42,12 @@ fn readFileValues(allocator: std.mem.Allocator, file_path: []const u8) !std.Arra
 }
 
 fn _is_save(level: *const std.ArrayList(i32)) bool {
+
+    // if there is not enough elements, send false
+    if (level.items.len == 1) {
+        return false;
+    }
+
     var dir = Direction.INC;
     var n_ = level.items[0] - 1;
 
@@ -50,28 +56,25 @@ fn _is_save(level: *const std.ArrayList(i32)) bool {
         n_ += 2;
     }
 
-    for (level.items) |n| {
-        const diff = n - n_;
-
-        // check problems
-        if (@abs(diff) > 3) {
-            return false;
-        }
-
-        if (diff == 0) {
-            return false;
-        }
-
-        if ((diff < 0) and dir == Direction.INC) {
-            return false;
-        }
-
-        if ((diff > 0) and dir == Direction.DEC) {
-            return false;
-        }
-
-        // update prev number
-        n_ = n;
+    switch (dir) {
+        .INC => {
+            for (level.items) |n| {
+                const diff = n - n_;
+                if (diff < 1 or diff > 3) {
+                    return false;
+                }
+                n_ = n;
+            }
+        },
+        .DEC => {
+            for (level.items) |n| {
+                const diff = n - n_;
+                if (diff > -1 or diff < -3) {
+                    return false;
+                }
+                n_ = n;
+            }
+        },
     }
 
     return true;
@@ -82,10 +85,6 @@ fn _is_save_damped(level: *const std.ArrayList(i32)) bool {
     // if all elements is save, then it is true
     if (_is_save(level)) {
         return true;
-    }
-
-    if (level.items.len <= 2) {
-        return false;
     }
 
     // else test with one less element
