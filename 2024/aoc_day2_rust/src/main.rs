@@ -1,15 +1,8 @@
-use core::num;
 
 #[derive(Debug, Clone, Copy)]
 enum FileChoice {
     Test,
     Run,
-}
-
-#[derive(Debug, Clone, Copy)]
-enum Direction {
-    INC,
-    DEC,
 }
 
 fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
@@ -33,6 +26,45 @@ fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
     levels
 }
 
+fn is_save(level: &Vec<i32>) -> bool {
+
+    if level.len() == 1 {
+        return false;
+    }
+
+    let is_inc = level
+        .windows(2)
+        .all(|le| {
+            (le[1] > le[0]) && 
+            (1..=3).contains(&(le[1] - le[0]))
+        });
+
+    let is_dec = level
+        .windows(2)
+        .all(|le| {
+            (le[1] < le[0]) && 
+            (-3..=-1).contains(&(le[1] - le[0]))
+        });
+    
+    return is_inc || is_dec;
+}
+
+fn is_saver(level: &Vec<i32>) -> bool {
+
+    if is_save(level) {
+        return true;
+    }
+    
+    (0..level.len())
+        .map(|i| {
+            let mut level_ = level.clone();
+            level_.remove(i);
+
+            is_save(&level_)
+        })
+        .any(|is_valid| is_valid)
+}
+
 fn run(choice: FileChoice) {
     let datafile = match choice {
         FileChoice::Test => include_str!("../data/test.txt"),
@@ -42,31 +74,19 @@ fn run(choice: FileChoice) {
     let levels = parse_data(datafile);
     
     // compute safe (PART1)
-    let mut safe_reports = 0;
-    
-    for level in levels {
-        let is_inc = level
-            .windows(2)
-            .all(|le| {
-                (le[1] > le[0]) && 
-                (le[1] - le[0] >= 1) && 
-                (le[1] - le[0] <= 3)
-            });
+    let safe_reports: u32 = levels.iter()
+            .map(|l| is_save(&l) as u32)
+            .sum();
 
-        let is_dec = level
-            .windows(2)
-            .all(|le| {
-                (le[1] < le[0]) && 
-                (le[1] - le[0] <= -1) && 
-                (le[1] - le[0] >= -3)
-            });
-        
-        if is_inc || is_dec {
-            safe_reports += 1;
-        }
-    }
+    println!("safe reports: {}", safe_reports);
     
-    println!("sare reports: {}", safe_reports);
+    // compute safer (PART2)
+    let safer_reports: u32 = levels.iter()
+            .map(|l| is_saver(&l) as u32)
+            .sum();
+
+    
+    println!("safer reports: {}", safer_reports);
     
     // println!("distance: {}", distance);
 
