@@ -1,6 +1,7 @@
 const std = @import("std");
 
 pub const FileChoice = enum { TEST, PUZZLE };
+pub const Options = enum { PART1, IMPLEMENT_DONT };
 
 pub fn readFile(allocator: std.mem.Allocator, file_path: []const u8) ![]u8 {
     // open the file
@@ -17,8 +18,9 @@ const Pair = struct {
 };
 
 // fn part1(allocator: std.mem.Allocator, txt: []const u8) !std.ArrayList(struct { x: i32, y: i32 }) {
-fn part1(allocator: std.mem.Allocator, txt: []const u8) !std.ArrayList(Pair) {
+fn part1(allocator: std.mem.Allocator, txt: []const u8) !u32 {
     var results = std.ArrayList(Pair).init(allocator);
+    defer results.deinit();
 
     // Find all matches
     var i: usize = 0;
@@ -59,7 +61,13 @@ fn part1(allocator: std.mem.Allocator, txt: []const u8) !std.ArrayList(Pair) {
         }
     }
 
-    return results;
+    // compute multiplication
+    var mul: u32 = 0;
+    for (results.items) |pair| {
+        mul += pair.x * pair.y;
+    }
+
+    return mul;
 }
 
 fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
@@ -79,16 +87,10 @@ fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
     defer allocator.free(txt);
 
     // part1
-    const results = try part1(allocator, txt);
-    defer results.deinit();
-
-    var mul1: u32 = 0;
-    for (results.items) |r| {
-        mul1 += r.x * r.y;
-    }
+    const a = try part1(allocator, txt);
 
     return .{
-        .a = mul1,
+        .a = a,
         .b = 0,
     };
 }
