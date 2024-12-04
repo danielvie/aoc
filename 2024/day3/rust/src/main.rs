@@ -71,9 +71,6 @@ fn run(choice: FileChoice) {
         FileChoice::Puzzle => include_str!("../../data/puzzle.txt")
     };
     
-    // parse file 
-    // parse_puzzle(&puzzle);
-
     // compute
     println!("{:?}", process(&puzzle));
     println!("{:?}", process_conditional(&puzzle));
@@ -87,11 +84,6 @@ fn main() {
     println!("\nTest2:");
     run(FileChoice::Test2);
 
-
     println!("\nPuzzle:");
-    // let start_time = std::time::Instant::now();
     run(FileChoice::Puzzle);
-    // let duration = start_time.elapsed();
-
-    // println!("\ntime taken duration_run: {:?}", duration);
 }
