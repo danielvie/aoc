@@ -2,17 +2,14 @@
 #[derive(Debug, Clone, Copy)]
 enum FileChoice {
     Test,
-    // Test2,
+    Test2,
     Puzzle,
-}
-
-fn parse_puzzle(puzzle: &str) {
-    println!("{}", puzzle);
 }
 
 fn process(s: &str) -> usize {
     let mut pos = 0;
     let mut total = 0;
+
     while let Some(loc) = &s[pos..].find("mul(") {
         pos += loc + 4;
         let Some(value) = multiply(&s[pos..]) else {
@@ -20,6 +17,31 @@ fn process(s: &str) -> usize {
         };
         total += value;
     }
+    total
+}
+
+fn process_conditional<S: AsRef<str>>(s: S) -> usize {
+    let s = s.as_ref();
+    let mut pos = 0;
+    let mut total = 0;
+    let mut enabled = true;
+    while let Some(loc) = get_next(&s[pos..]) {
+        pos += loc;
+        match &s[pos..pos+3] {
+            "mul" => {
+                if enabled {
+                    if let Some(product) = multiply(&s[pos + 4..]) {
+                        total += product;
+                    }
+                }
+            }
+            "do(" => enabled = true,
+            "don" => enabled = false,
+            _ => panic!("bad pattern: {}", &s[pos..pos + 3]),
+        }
+        pos += 4;
+    }
+    
     total
 }
 
@@ -32,10 +54,20 @@ fn multiply(s: &str) -> Option<usize> {
     Some(left*right)
 }
 
+fn get_next(s: &str) -> Option<usize> {
+    let mul_loc = s.find("mul(");
+    let do_loc = s.find("do()");
+    let dont_loc = s.find("don't()");
+    
+    [mul_loc, do_loc, dont_loc].iter()
+        .filter_map(|loc| *loc)
+        .min()
+}
+
 fn run(choice: FileChoice) {
     let puzzle = match choice {
         FileChoice::Test => include_str!("../../data/test.txt"),
-        // FileChoice::Test2 => include_str!("../../data/test2.txt"),
+        FileChoice::Test2 => include_str!("../../data/test2.txt"),
         FileChoice::Puzzle => include_str!("../../data/puzzle.txt")
     };
     
@@ -44,12 +76,17 @@ fn run(choice: FileChoice) {
 
     // compute
     println!("{:?}", process(&puzzle));
+    println!("{:?}", process_conditional(&puzzle));
     
 }
 
 fn main() {
     println!("Test:");
     run(FileChoice::Test);
+
+    println!("\nTest2:");
+    run(FileChoice::Test2);
+
 
     println!("\nPuzzle:");
     // let start_time = std::time::Instant::now();
