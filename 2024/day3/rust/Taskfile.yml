@@ -3,12 +3,13 @@ version: '3'
 tasks:
 
   default:
-    deps: [main]
+    deps: [test]
 
   main:
     cmds:
      - cargo run
 
   test:
+    aliases: [t]
     cmds:
      - cargo test
