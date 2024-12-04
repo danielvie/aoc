@@ -6,7 +6,7 @@ def run1(filename: str) -> int:
         txt = f.read()
         
     # finding patterns
-    m = re.findall(r'mul\((\d+),\s*(\d+)\)', txt)
+    m = re.findall(r'mul\((\d+),(\d+)\)', txt)
 
     # multiplying elements
     mul = sum(int(a)*int(b) for a,b in m)
@@ -22,7 +22,7 @@ def run2(filename: str) -> int:
     m = re.sub(r"don't\(\).*?do\(\)", "", txt)
 
     # finding patterns
-    m = re.findall(r'mul\((\d+),\s*(\d+)\)', m)
+    m = re.findall(r'mul\((\d+),(\d+)\)', m)
 
     # multiplying elements
     mul = sum(int(a)*int(b) for a,b in m)

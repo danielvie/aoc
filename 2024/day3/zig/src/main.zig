@@ -7,8 +7,59 @@ pub fn readFile(allocator: std.mem.Allocator, file_path: []const u8) ![]u8 {
     const file = try std.fs.cwd().openFile(file_path, .{});
     defer file.close();
 
-    // read the entire file content
+    // read the entire file txt
     return try file.readToEndAlloc(allocator, std.math.maxInt(usize));
+}
+
+const Pair = struct {
+    x: u32,
+    y: u32,
+};
+
+// fn part1(allocator: std.mem.Allocator, txt: []const u8) !std.ArrayList(struct { x: i32, y: i32 }) {
+fn part1(allocator: std.mem.Allocator, txt: []const u8) !std.ArrayList(Pair) {
+    var results = std.ArrayList(Pair).init(allocator);
+
+    // Find all matches
+    var i: usize = 0;
+
+    while (i < txt.len) : (i += 1) {
+        // find 'mul('
+        if (txt.len - i >= 4 and std.mem.eql(u8, txt[i .. i + 4], "mul(")) {
+            // parse first number (a)
+            var j = i + 4;
+            var a = std.ArrayList(u8).init(allocator);
+            defer a.deinit();
+
+            while (j < txt.len and txt[j] >= '0' and txt[j] <= '9') {
+                try a.append(txt[j]);
+                j += 1;
+            }
+
+            // skip comma
+            if (j < txt.len and txt[j] == ',') {
+                j += 1;
+            }
+
+            // parse second number (b)
+            var b = std.ArrayList(u8).init(allocator);
+            defer b.deinit();
+
+            while (j < txt.len and txt[j] >= '0' and txt[j] <= '9') {
+                try b.append(txt[j]);
+                j += 1;
+            }
+
+            // ensure closing parenthesis
+            if (j < txt.len and txt[j] == ')') {
+                const x = try std.fmt.parseInt(u32, a.items, 10);
+                const y = try std.fmt.parseInt(u32, b.items, 10);
+                try results.append(.{ .x = x, .y = y });
+            }
+        }
+    }
+
+    return results;
 }
 
 fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
@@ -24,17 +75,20 @@ fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
     const allocator = gpa.allocator();
 
     // read file
-    const content = readFile(allocator, filename) catch |err| {
-        std.debug.print("Error reading file: {}\n", .{err});
-        return err;
-    };
-    defer allocator.free(content);
+    const txt = try readFile(allocator, filename);
+    defer allocator.free(txt);
 
-    // print file contents
-    std.debug.print("File contents:\n{s}\n", .{content});
+    // part1
+    const results = try part1(allocator, txt);
+    defer results.deinit();
+
+    var mul1: u32 = 0;
+    for (results.items) |r| {
+        mul1 += r.x * r.y;
+    }
 
     return .{
-        .a = 0,
+        .a = mul1,
         .b = 0,
     };
 }
@@ -45,4 +99,10 @@ pub fn main() !void {
     std.debug.print("test:\n", .{});
     std.debug.print("a: {}\n", .{result_1.a});
     std.debug.print("b: {}\n", .{result_1.b});
+
+    const result_2 = try run(FileChoice.PUZZLE);
+    std.debug.print("\n", .{});
+    std.debug.print("test:\n", .{});
+    std.debug.print("a: {}\n", .{result_2.a});
+    std.debug.print("b: {}\n", .{result_2.b});
 }

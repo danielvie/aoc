@@ -2,8 +2,12 @@
 #[derive(Debug, Clone, Copy)]
 enum FileChoice {
     Test,
-    Test2,
-    Puzzle,
+    // Test2,
+    // Puzzle,
+}
+
+enum Instruction {
+    Mul(u32, u32),
 }
 
 fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
@@ -27,50 +31,11 @@ fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
     levels
 }
 
-fn is_safe(level: &Vec<i32>) -> bool {
-
-    if level.len() == 1 {
-        return false;
-    }
-
-    let is_inc = level
-        .windows(2)
-        .all(|le| {
-            (le[1] > le[0]) && 
-            (1..=3).contains(&(le[1] - le[0]))
-        });
-
-    let is_dec = level
-        .windows(2)
-        .all(|le| {
-            (le[1] < le[0]) && 
-            (-3..=-1).contains(&(le[1] - le[0]))
-        });
-    
-    return is_inc || is_dec;
-}
-
-fn is_safe_damped(level: &Vec<i32>) -> bool {
-
-    if is_safe(level) {
-        return true;
-    }
-    
-    (0..level.len())
-        .map(|i| {
-            let mut level_ = level.clone();
-            level_.remove(i);
-
-            is_safe(&level_)
-        })
-        .any(|is_valid| is_valid)
-}
-
 fn run(choice: FileChoice) {
     let datafile = match choice {
         FileChoice::Test => include_str!("../../data/test.txt"),
-        FileChoice::Test2 => include_str!("../../data/test2.txt"),
-        FileChoice::Puzzle => include_str!("../../data/puzzle.txt")
+        // FileChoice::Test2 => include_str!("../../data/test2.txt"),
+        // FileChoice::Puzzle => include_str!("../../data/puzzle.txt")
     };
 
     let levels = parse_data(datafile);
@@ -94,10 +59,10 @@ fn main() {
     println!("Test:");
     run(FileChoice::Test);
 
-    println!("\nPuzzle:");
-    let start_time = std::time::Instant::now();
-    run(FileChoice::Puzzle);
-    let duration = start_time.elapsed();
+    // println!("\nPuzzle:");
+    // let start_time = std::time::Instant::now();
+    // run(FileChoice::Puzzle);
+    // let duration = start_time.elapsed();
 
-    println!("\ntime taken duration_run: {:?}", duration);
+    // println!("\ntime taken duration_run: {:?}", duration);
 }
