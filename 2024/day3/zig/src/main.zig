@@ -1,7 +1,8 @@
 const std = @import("std");
 
-pub const FileChoice = enum { TEST, PUZZLE };
-pub const Options = enum { PART1, IMPLEMENT_DONT };
+pub const FileChoice = enum { TEST, TEST2, PUZZLE };
+pub const OperationMode = enum { PART1, PART2 };
+pub const State = enum { DO, DONT };
 
 pub fn readFile(allocator: std.mem.Allocator, file_path: []const u8) ![]u8 {
     // open the file
@@ -17,15 +18,38 @@ const Pair = struct {
     y: u32,
 };
 
-// fn part1(allocator: std.mem.Allocator, txt: []const u8) !std.ArrayList(struct { x: i32, y: i32 }) {
-fn part1(allocator: std.mem.Allocator, txt: []const u8) !u32 {
+fn findMatches(allocator: std.mem.Allocator, txt: []const u8, mode: OperationMode) !std.ArrayList(Pair) {
     var results = std.ArrayList(Pair).init(allocator);
-    defer results.deinit();
 
-    // Find all matches
+    var state = State.DO;
     var i: usize = 0;
-
     while (i < txt.len) : (i += 1) {
+        // implement "DONT" logic
+        if (mode == OperationMode.PART2) {
+            // find "don't("
+            if (txt.len - i >= 7 and std.mem.eql(u8, txt[i .. i + 6], "don't(")) {
+
+                // ensure ")"
+                if (txt[i + 6] == ')') {
+                    state = State.DONT;
+                }
+            }
+
+            // find "do"
+            if (txt.len - i >= 4 and std.mem.eql(u8, txt[i .. i + 3], "do(")) {
+
+                // ensure ")"
+                if (txt[i + 3] == ')') {
+                    state = State.DO;
+                }
+            }
+
+            // dont parse if "dont" state
+            if (state == State.DONT) {
+                continue;
+            }
+        }
+
         // find 'mul('
         if (txt.len - i >= 4 and std.mem.eql(u8, txt[i .. i + 4], "mul(")) {
             // parse first number (a)
@@ -60,20 +84,14 @@ fn part1(allocator: std.mem.Allocator, txt: []const u8) !u32 {
             }
         }
     }
-
-    // compute multiplication
-    var mul: u32 = 0;
-    for (results.items) |pair| {
-        mul += pair.x * pair.y;
-    }
-
-    return mul;
+    return results;
 }
 
-fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
+fn run(choice: FileChoice, mode: OperationMode) !u32 {
     // open the file
     const filename = switch (choice) {
         .TEST => "../data/test.txt",
+        .TEST2 => "../data/test2.txt",
         .PUZZLE => "../data/puzzle.txt",
     };
 
@@ -86,25 +104,33 @@ fn run(choice: FileChoice) !struct { a: u32, b: u32 } {
     const txt = try readFile(allocator, filename);
     defer allocator.free(txt);
 
-    // part1
-    const a = try part1(allocator, txt);
+    // std.debug.print("\n{s}", .{txt});
 
-    return .{
-        .a = a,
-        .b = 0,
-    };
+    const results = try findMatches(allocator, txt, mode);
+    defer results.deinit();
+
+    var mul: u32 = 0;
+    for (results.items) |pair| {
+        mul += pair.x * pair.y;
+    }
+
+    return mul;
 }
 
 pub fn main() !void {
-    const result_1 = try run(FileChoice.TEST);
+    const result_1 = try run(FileChoice.TEST, OperationMode.PART1);
     std.debug.print("\n", .{});
-    std.debug.print("test:\n", .{});
-    std.debug.print("a: {}\n", .{result_1.a});
-    std.debug.print("b: {}\n", .{result_1.b});
+    std.debug.print("test part 1: {}\n", .{result_1});
 
-    const result_2 = try run(FileChoice.PUZZLE);
+    const result_2 = try run(FileChoice.TEST2, OperationMode.PART2);
     std.debug.print("\n", .{});
-    std.debug.print("test:\n", .{});
-    std.debug.print("a: {}\n", .{result_2.a});
-    std.debug.print("b: {}\n", .{result_2.b});
+    std.debug.print("test part 2: {}\n", .{result_2});
+
+    const result_3 = try run(FileChoice.PUZZLE, OperationMode.PART1);
+    std.debug.print("\n", .{});
+    std.debug.print("puzzle part 1: {}\n", .{result_3});
+
+    const result_4 = try run(FileChoice.PUZZLE, OperationMode.PART2);
+    std.debug.print("\n", .{});
+    std.debug.print("puzzle part 2: {}\n", .{result_4});
 }
