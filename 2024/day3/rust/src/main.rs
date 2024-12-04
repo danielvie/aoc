@@ -3,65 +3,57 @@
 enum FileChoice {
     Test,
     // Test2,
-    // Puzzle,
+    Puzzle,
 }
 
-enum Instruction {
-    Mul(u32, u32),
+fn parse_puzzle(puzzle: &str) {
+    println!("{}", puzzle);
 }
 
-fn parse_data(puzzle: &str) -> Vec<Vec<i32>> {
-    // vector to store sequences
-    let mut levels: Vec<Vec<i32>> = Vec::new();
-    
-    // split the input
-    for line in puzzle.lines() {
-
-        let level: Vec<i32> = line
-            .split_whitespace()
-            .filter_map(|n| n.parse().ok())
-            .collect();
-
-        // only add non-empty
-        if !level.is_empty() {
-            levels.push(level);
-        }
+fn process(s: &str) -> usize {
+    let mut pos = 0;
+    let mut total = 0;
+    while let Some(loc) = &s[pos..].find("mul(") {
+        pos += loc + 4;
+        let Some(value) = multiply(&s[pos..]) else {
+            continue;
+        };
+        total += value;
     }
+    total
+}
+
+fn multiply(s: &str) -> Option<usize> {
+    let (left, rest) = s.split_once(',')?;
+    let left = left.parse::<usize>().ok()?;
+    let (right, _) = rest.split_once(')')?;
+    let right = right.parse::<usize>().ok()?;
     
-    levels
+    Some(left*right)
 }
 
 fn run(choice: FileChoice) {
-    let datafile = match choice {
+    let puzzle = match choice {
         FileChoice::Test => include_str!("../../data/test.txt"),
         // FileChoice::Test2 => include_str!("../../data/test2.txt"),
-        // FileChoice::Puzzle => include_str!("../../data/puzzle.txt")
+        FileChoice::Puzzle => include_str!("../../data/puzzle.txt")
     };
+    
+    // parse file 
+    // parse_puzzle(&puzzle);
 
-    let levels = parse_data(datafile);
+    // compute
+    println!("{:?}", process(&puzzle));
     
-    // compute safe (PART1)
-    let safe_reports: u32 = levels.iter()
-            .map(|l| is_safe(&l) as u32)
-            .sum();
-
-    println!("safe reports: {}", safe_reports);
-    
-    // compute safer (PART2)
-    let safer_reports: u32 = levels.iter()
-            .map(|l| is_safe_damped(&l) as u32)
-            .sum();
-    
-    println!("safe damped reports: {}", safer_reports);
 }
 
 fn main() {
     println!("Test:");
     run(FileChoice::Test);
 
-    // println!("\nPuzzle:");
+    println!("\nPuzzle:");
     // let start_time = std::time::Instant::now();
-    // run(FileChoice::Puzzle);
+    run(FileChoice::Puzzle);
     // let duration = start_time.elapsed();
 
     // println!("\ntime taken duration_run: {:?}", duration);
