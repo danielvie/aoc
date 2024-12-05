@@ -20,7 +20,8 @@ fn process(s: &str) -> usize {
     total
 }
 
-fn process_conditional(s: &str) -> usize {
+fn process_conditional<S: AsRef<str>>(s: S) -> usize {
+    let s = s.as_ref();
     let mut pos = 0;
     let mut total = 0;
     let mut state = State::DO;
