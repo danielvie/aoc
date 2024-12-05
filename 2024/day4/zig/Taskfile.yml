@@ -1,0 +1,15 @@
+version: '3'
+
+tasks:
+
+  default:
+    deps: [main]
+
+  main:
+    cmds:
+     - zig build run
+
+  test:
+    aliases: [t]
+    cmds:
+     - zig test src/main.zig
