@@ -4,6 +4,11 @@ const mem = std.mem;
 
 pub const FileChoice = enum { TEST, PUZZLE };
 
+const Pair = struct {
+    x: i32,
+    y: i32,
+};
+
 pub fn readPuzzle(allocator: std.mem.Allocator, choice: FileChoice) ![]u8 {
     // get addr
     const filename = switch (choice) {
@@ -65,6 +70,24 @@ pub fn main() !void {
     std.debug.print("\n\n\n", .{});
     std.debug.print("buffer (len:{}, cont: {}): \n{s}\n", .{ buffer.len, counter, buffer });
     std.debug.print("slice (len:{}): \n{s}\n", .{ slice.len, slice });
+
+    // create a dynamic array
+    var Dir = std.ArrayList(Pair).init(allocator);
+    defer Dir.deinit();
+
+    // populating values
+    var i: i32 = -1;
+    while (i <= 1) : (i += 1) {
+        var j: i32 = -1;
+        while (j <= 1) : (j += 1) {
+            try Dir.append(.{ .x = i, .y = j });
+        }
+    }
+
+    // printing result
+    for (Dir.items) |d| {
+        std.debug.print("{}\n", .{d});
+    }
 }
 
 fn get(puzzle: []u8, n: usize, m: usize, i: usize, j: usize) u8 {
