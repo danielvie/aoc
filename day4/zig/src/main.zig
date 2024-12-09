@@ -31,21 +31,21 @@ pub fn main() !void {
     defer allocator.free(puzzle);
 
     // removing '\n'
-    const n: usize = std.mem.indexOf(u8, puzzle, "\n").? - 1;
-    var m: usize = 0;
+    const m: usize = std.mem.indexOf(u8, puzzle, "\n").? - 1;
+    var n: usize = 0;
     for (puzzle) |c| {
         if (c == '\n') {
-            m += 1;
+            n += 1;
         }
     }
-    std.debug.print("n, m: {}, {}\n", .{ n, m });
+    std.debug.print("n, m: {}, {}\n", .{ m, n });
 
     var buffer = try allocator.alloc(u8, puzzle.len);
     defer allocator.free(buffer);
 
     var counter: usize = 0;
     for (puzzle) |c| {
-        if (c != '\n' and c != '\r') {
+        if (std.ascii.isAlphabetic(c)) {
             if (counter < buffer.len) {
                 buffer[counter] = c;
                 counter += 1;
@@ -57,8 +57,20 @@ pub fn main() !void {
 
     const slice = buffer[0..counter];
 
-    std.debug.print("puzzle (len:{}): \n{s}", .{ puzzle.len, puzzle });
+    std.debug.print("\npuzzle (len:{}): \n{s}", .{ puzzle.len, puzzle });
+
+    std.debug.print("\n", .{});
+    std.debug.print("puzzle(i,j): {c}\n", .{get(slice, m, n, 7, 8)});
+
     std.debug.print("\n\n\n", .{});
     std.debug.print("buffer (len:{}, cont: {}): \n{s}\n", .{ buffer.len, counter, buffer });
     std.debug.print("slice (len:{}): \n{s}\n", .{ slice.len, slice });
+}
+
+fn get(puzzle: []u8, n: usize, m: usize, i: usize, j: usize) u8 {
+    const idx = (i - 1) * n + (j - 1);
+    std.debug.print("n, m: {}, {}; i, j: {}, {}, idx: {}\n", .{ n, m, i, j, idx });
+    const c = puzzle[idx];
+    std.debug.print("c: {c}\n", .{c});
+    return c;
 }
