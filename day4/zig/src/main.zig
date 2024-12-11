@@ -32,18 +32,12 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     // open the file
-    const puzzle = try readPuzzle(allocator, FileChoice.TEST);
+    const puzzle = try readPuzzle(allocator, FileChoice.PUZZLE);
     defer allocator.free(puzzle);
 
     // removing '\n'
-    const m: usize = std.mem.indexOf(u8, puzzle, "\n").? - 1;
-    var n: usize = 0;
-    for (puzzle) |c| {
-        if (c == '\n') {
-            n += 1;
-        }
-    }
-    std.debug.print("n, m: {}, {}\n", .{ m, n });
+    const col: usize = std.mem.indexOf(u8, puzzle, "\n").? - 1;
+    const lin = col;
 
     var buffer = try allocator.alloc(u8, puzzle.len);
     defer allocator.free(buffer);
@@ -62,15 +56,6 @@ pub fn main() !void {
 
     const slice = buffer[0..counter];
 
-    std.debug.print("\npuzzle (len:{}): \n{s}", .{ puzzle.len, puzzle });
-
-    std.debug.print("\n", .{});
-    std.debug.print("puzzle(i,j): {c}\n", .{get(slice, m, n, 7, 8)});
-
-    std.debug.print("\n\n\n", .{});
-    std.debug.print("buffer (len:{}, cont: {}): \n{s}\n", .{ buffer.len, counter, buffer });
-    std.debug.print("slice (len:{}): \n{s}\n", .{ slice.len, slice });
-
     // create a dynamic array
     var Dir = std.ArrayList(Pair).init(allocator);
     defer Dir.deinit();
@@ -84,16 +69,81 @@ pub fn main() !void {
         }
     }
 
-    // printing result
-    for (Dir.items) |d| {
-        std.debug.print("{}\n", .{d});
+    // checking if is valid
+    std.debug.print("source: \n{s}\n", .{puzzle});
+    std.debug.print("flat: {s}\n", .{slice});
+
+    std.debug.print("lin, col: {}, {}; slice.len: {}\n", .{ lin, col, slice.len });
+    var res: usize = 0;
+    for (0..lin) |ii| {
+        for (0..col) |jj| {
+            res += get(slice, lin, col, ii + 1, jj + 1);
+        }
     }
+
+    std.debug.print("res: {}", .{res});
 }
 
-fn get(puzzle: []u8, n: usize, m: usize, i: usize, j: usize) u8 {
-    const idx = (i - 1) * n + (j - 1);
-    std.debug.print("n, m: {}, {}; i, j: {}, {}, idx: {}\n", .{ n, m, i, j, idx });
-    const c = puzzle[idx];
-    std.debug.print("c: {c}\n", .{c});
-    return c;
+fn get(puzzle: []u8, lin: usize, col: usize, i: usize, j: usize) usize {
+    const idx = (i - 1) * lin + (j - 1);
+
+    // check right
+    const is_xmas_r = if (j + 3 < col) puzzle[idx] == 'X' and
+        puzzle[idx + 1] == 'M' and
+        puzzle[idx + 2] == 'A' and
+        puzzle[idx + 3] == 'S' else false;
+
+    // check down
+    const is_xmas_d = if (i + 3 < lin) puzzle[idx] == 'X' and
+        puzzle[idx + lin] == 'M' and
+        puzzle[idx + lin * 2] == 'A' and
+        puzzle[idx + lin * 3] == 'S' else false;
+
+    // check up
+    const is_xmas_u = if (i > 3) puzzle[idx] == 'X' and
+        puzzle[idx - lin] == 'M' and
+        puzzle[idx - lin * 2] == 'A' and
+        puzzle[idx - lin * 3] == 'S' else false;
+
+    // check left
+    const is_xmas_l = if (j > 3) puzzle[idx] == 'X' and
+        puzzle[idx - 1] == 'M' and
+        puzzle[idx - 2] == 'A' and
+        puzzle[idx - 3] == 'S' else false;
+
+    // check right down
+    const is_xmas_rd = if (i + 3 < lin and j + 3 < col) puzzle[idx] == 'X' and
+        puzzle[idx + lin * 1 + 1] == 'M' and
+        puzzle[idx + lin * 2 + 2] == 'A' and
+        puzzle[idx + lin * 3 + 3] == 'S' else false;
+
+    // check right up
+    const is_xmas_ru = if (i > 3 and j + 3 < col) puzzle[idx] == 'X' and
+        puzzle[idx - lin * 1 + 1] == 'M' and
+        puzzle[idx - lin * 2 + 2] == 'A' and
+        puzzle[idx - lin * 3 + 3] == 'S' else false;
+
+    // check left up
+    const is_xmas_lu = if (i > 3 and j > 3) puzzle[idx] == 'X' and
+        puzzle[idx - lin * 1 - 1] == 'M' and
+        puzzle[idx - lin * 2 - 2] == 'A' and
+        puzzle[idx - lin * 3 - 3] == 'S' else false;
+
+    // check left down
+    const is_xmas_ld = if (i + 3 < col and j > 3) puzzle[idx] == 'X' and
+        puzzle[idx + lin * 1 - 1] == 'M' and
+        puzzle[idx + lin * 2 - 2] == 'A' and
+        puzzle[idx + lin * 3 - 3] == 'S' else false;
+
+    var res: usize = 0;
+    res += @intFromBool(is_xmas_r);
+    res += @intFromBool(is_xmas_d);
+    res += @intFromBool(is_xmas_u);
+    res += @intFromBool(is_xmas_l);
+    res += @intFromBool(is_xmas_rd);
+    res += @intFromBool(is_xmas_ru);
+    res += @intFromBool(is_xmas_lu);
+    res += @intFromBool(is_xmas_ld);
+
+    return res;
 }

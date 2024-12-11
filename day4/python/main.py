@@ -5,6 +5,8 @@ with open("../data/puzzle.txt") as f:
 n = len(lines)
 m = len(lines[0])
 
+print('n,m:', n, m)
+
 # generate directions
 dd = []
 for dx in range(-1, 2):
