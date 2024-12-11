@@ -56,18 +56,18 @@ pub fn main() !void {
 
     const slice = buffer[0..counter];
 
-    // create a dynamic array
-    var Dir = std.ArrayList(Pair).init(allocator);
-    defer Dir.deinit();
+    // // create a dynamic array
+    // var Dir = std.ArrayList(Pair).init(allocator);
+    // defer Dir.deinit();
 
-    // populating values
-    var i: i32 = -1;
-    while (i <= 1) : (i += 1) {
-        var j: i32 = -1;
-        while (j <= 1) : (j += 1) {
-            try Dir.append(.{ .x = i, .y = j });
-        }
-    }
+    // // populating values
+    // var i: i32 = -1;
+    // while (i <= 1) : (i += 1) {
+    //     var j: i32 = -1;
+    //     while (j <= 1) : (j += 1) {
+    //         try Dir.append(.{ .x = i, .y = j });
+    //     }
+    // }
 
     // checking if is valid
     std.debug.print("source: \n{s}\n", .{puzzle});
@@ -136,11 +136,11 @@ fn check_xmas(puzzle: []u8, lin: usize, col: usize, i: usize, j: usize) usize {
 
     var res: usize = 0;
     res += @intFromBool(is_xmas_r);
-    res += @intFromBool(is_xmas_d);
-    res += @intFromBool(is_xmas_u);
     res += @intFromBool(is_xmas_l);
-    res += @intFromBool(is_xmas_rd);
+    res += @intFromBool(is_xmas_u);
+    res += @intFromBool(is_xmas_d);
     res += @intFromBool(is_xmas_ru);
+    res += @intFromBool(is_xmas_rd);
     res += @intFromBool(is_xmas_lu);
     res += @intFromBool(is_xmas_ld);
 

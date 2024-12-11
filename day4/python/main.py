@@ -13,7 +13,8 @@ for dx in range(-1, 2):
     for dy in range(-1, 2):
         if dx != 0 or dy != 0:
             dd.append((dx, dy))
-            
+
+dd = [(1, -1)]
 print(dd)
 
 def has_xmas(i, j, d):
