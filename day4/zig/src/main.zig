@@ -71,20 +71,19 @@ pub fn main() !void {
 
     // checking if is valid
     std.debug.print("source: \n{s}\n", .{puzzle});
-    std.debug.print("flat: {s}\n", .{slice});
 
     std.debug.print("lin, col: {}, {}; slice.len: {}\n", .{ lin, col, slice.len });
     var res: usize = 0;
-    for (0..lin) |ii| {
-        for (0..col) |jj| {
-            res += get(slice, lin, col, ii + 1, jj + 1);
+    for (1..lin + 1) |ii| {
+        for (1..col + 1) |jj| {
+            res += check_xmas(slice, lin, col, ii, jj);
         }
     }
 
     std.debug.print("res: {}", .{res});
 }
 
-fn get(puzzle: []u8, lin: usize, col: usize, i: usize, j: usize) usize {
+fn check_xmas(puzzle: []u8, lin: usize, col: usize, i: usize, j: usize) usize {
     const idx = (i - 1) * lin + (j - 1);
 
     // check right
