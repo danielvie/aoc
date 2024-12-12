@@ -4,7 +4,7 @@ class File(Enum):
     Test = "../data/test.txt",
     Puzzle = "../data/puzzle.txt",
 
-with open(File.Puzzle.value[0]) as f:
+with open(File.Test.value[0]) as f:
     lines = f.read().strip().split("\n");
 
 lins = len(lines)
@@ -30,13 +30,42 @@ def has_xmas(i, j, d):
             return False
     return True
 
+n = lins
+m = cols
+def has_x_mas(i, j):
+    if not (1 <= i < n - 1 and 1 <= j < m -1):
+        return False
+    if lines[i][j] != "A":
+        return False
+        
+    # check diagonals
+    diag1 = f"{lines[i-1][j-1]}{lines[i+1][j+1]}"
+    diag2 = f"{lines[i-1][j+1]}{lines[i+1][j-1]}"
+    
+    res = diag1 in ["MS", "SM"] and diag2 in ["MS", "SM"]
+    if res:
+        print(i, j,'->', diag1, diag2)
+    
+    return res
+
+
 if __name__ == "__main__":
-    # count every cell in every direction
+
+    # PART 1
     total = 0
     for i in range(lins):
         for j in range(cols):
             for d in dd:
                 total += has_xmas(i, j, d)
                 
-    print(f'total: {total}')
+    print(f'part1: {total}')
+        
+
+    # PART 2
+    total = 0
+    for i in range(lins):
+        for j in range(cols):
+            total += has_x_mas(i, j)
+                
+    print(f'part2: {total}')
         
