@@ -99,10 +99,10 @@ pub fn main() !void {
 
     // PART 1
     var total: u32 = 0;
-    for (0..lin) |ii| {
-        for (0..col) |jj| {
+    for (0..lin) |i| {
+        for (0..col) |j| {
             for (directions.items) |d| {
-                const res = has_xmas(slice, @intCast(col), @intCast(ii), @intCast(jj), d.x, d.y);
+                const res = has_xmas(slice, @intCast(col), @intCast(i), @intCast(j), d.x, d.y);
                 total += @intFromBool(res);
             }
         }
@@ -111,9 +111,9 @@ pub fn main() !void {
 
     // PART 2
     total = 0;
-    for (0..lin) |ii| {
-        for (0..col) |jj| {
-            const res = has_x_mas(slice, @intCast(col), @intCast(ii), @intCast(jj));
+    for (0..lin) |i| {
+        for (0..col) |j| {
+            const res = has_x_mas(slice, @intCast(col), @intCast(i), @intCast(j));
             total += @intFromBool(res);
         }
     }
