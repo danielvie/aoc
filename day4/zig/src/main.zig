@@ -24,6 +24,48 @@ pub fn readPuzzle(allocator: std.mem.Allocator, choice: FileChoice) ![]u8 {
     return try file.readToEndAlloc(allocator, std.math.maxInt(usize));
 }
 
+fn get_slice(allocator: std.mem.Allocator, puzzle: []const u8) ![]u8 {
+    // counting alphabetic chars
+    var counter: usize = 0;
+    for (puzzle) |c| {
+        if (std.ascii.isAlphabetic(c)) {
+            counter += 1;
+        }
+    }
+
+    // allocating buffer
+    var buffer = try allocator.alloc(u8, counter);
+
+    // writing flat string
+    counter = 0;
+    for (puzzle) |c| {
+        if (std.ascii.isAlphabetic(c)) {
+            if (counter < puzzle.len) {
+                buffer[counter] = c;
+                counter += 1;
+            } else {
+                break;
+            }
+        }
+    }
+
+    return buffer;
+}
+
+fn get_directions(allocator: std.mem.Allocator) !std.ArrayList(Pair) {
+    var directions = std.ArrayList(Pair).init(allocator);
+
+    var i: i32 = -1;
+    while (i <= 1) : (i += 1) {
+        var j: i32 = -1;
+        while (j <= 1) : (j += 1) {
+            try directions.append(.{ .x = i, .y = j });
+        }
+    }
+
+    return directions;
+}
+
 pub fn main() !void {
 
     // create a general-purpose allocator
@@ -32,7 +74,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     // open the file
-    const puzzle = try readPuzzle(allocator, FileChoice.PUZZLE);
+    const puzzle = try readPuzzle(allocator, FileChoice.TEST);
     defer allocator.free(puzzle);
 
     // getting number of columns
@@ -48,33 +90,12 @@ pub fn main() !void {
     std.debug.print("lin, col: {}, {}\n", .{ lin, col });
 
     // getting flat slice of the puzzle
-    var buffer = try allocator.alloc(u8, puzzle.len);
-    defer allocator.free(buffer);
-
-    var counter: usize = 0;
-    for (puzzle) |c| {
-        if (std.ascii.isAlphabetic(c)) {
-            if (counter < buffer.len) {
-                buffer[counter] = c;
-                counter += 1;
-            } else {
-                break;
-            }
-        }
-    }
-    const slice = buffer[0..counter];
+    const slice = try get_slice(allocator, puzzle);
+    defer allocator.free(slice);
 
     // create a dynamic array with the possible directions
-    var directions = std.ArrayList(Pair).init(allocator);
+    const directions = try get_directions(allocator);
     defer directions.deinit();
-
-    var i: i32 = -1;
-    while (i <= 1) : (i += 1) {
-        var j: i32 = -1;
-        while (j <= 1) : (j += 1) {
-            try directions.append(.{ .x = i, .y = j });
-        }
-    }
 
     // PART 1
     var total: u32 = 0;
@@ -99,7 +120,7 @@ pub fn main() !void {
     std.debug.print("part2: {}\n", .{total});
 }
 
-fn get(puzzle: []u8, col: i32, i: i32, j: i32) u8 {
+fn get(puzzle: []const u8, col: i32, i: i32, j: i32) u8 {
     // converting idx
     const idx: i32 = i * col + j;
 
