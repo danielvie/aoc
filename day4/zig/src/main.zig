@@ -38,6 +38,7 @@ pub fn main() !void {
     // removing '\n'
     const col: usize = std.mem.indexOf(u8, puzzle, "\n").? - 1;
     const lin = col;
+    std.debug.print("lin, col: {}, {}\n", .{ lin, col });
 
     var buffer = try allocator.alloc(u8, puzzle.len);
     defer allocator.free(buffer);
@@ -56,93 +57,63 @@ pub fn main() !void {
 
     const slice = buffer[0..counter];
 
-    // // create a dynamic array
-    // var Dir = std.ArrayList(Pair).init(allocator);
-    // defer Dir.deinit();
+    // create a dynamic array
+    var Dir = std.ArrayList(Pair).init(allocator);
+    defer Dir.deinit();
 
-    // // populating values
-    // var i: i32 = -1;
-    // while (i <= 1) : (i += 1) {
-    //     var j: i32 = -1;
-    //     while (j <= 1) : (j += 1) {
-    //         try Dir.append(.{ .x = i, .y = j });
-    //     }
-    // }
-
-    // checking if is valid
-    std.debug.print("source: \n{s}\n", .{puzzle});
-
-    std.debug.print("lin, col: {}, {}; slice.len: {}\n", .{ lin, col, slice.len });
-    var res: usize = 0;
-    for (1..lin + 1) |ii| {
-        for (1..col + 1) |jj| {
-            res += check_xmas(slice, lin, col, ii, jj);
+    // populating values
+    var i: i32 = -1;
+    while (i <= 1) : (i += 1) {
+        var j: i32 = -1;
+        while (j <= 1) : (j += 1) {
+            try Dir.append(.{ .x = i, .y = j });
         }
     }
 
-    std.debug.print("res: {}", .{res});
+    // counting number of 'xmas'
+    var total: u32 = 0;
+    for (0..lin) |ii| {
+        for (0..col) |jj| {
+            for (Dir.items) |d| {
+                const res = has_xmas(slice, @intCast(col), @intCast(ii), @intCast(jj), d.x, d.y);
+                total += @intFromBool(res);
+            }
+        }
+    }
+    std.debug.print("total: {}\n", .{total});
 }
 
-fn check_xmas(puzzle: []u8, lin: usize, col: usize, i: usize, j: usize) usize {
-    const idx = (i - 1) * lin + (j - 1);
+fn get(puzzle: []u8, col: i32, i: i32, j: i32) u8 {
+    // converting idx
+    const idx: i32 = i * col + j;
 
-    // check right
-    const is_xmas_r = if (j + 3 < col) puzzle[idx] == 'X' and
-        puzzle[idx + 1] == 'M' and
-        puzzle[idx + 2] == 'A' and
-        puzzle[idx + 3] == 'S' else false;
+    if (idx >= 0 and idx < puzzle.len) {
+        return puzzle[@intCast(idx)];
+    } else {
+        return '.';
+    }
+}
 
-    // check down
-    const is_xmas_d = if (i + 3 < lin) puzzle[idx] == 'X' and
-        puzzle[idx + lin] == 'M' and
-        puzzle[idx + lin * 2] == 'A' and
-        puzzle[idx + lin * 3] == 'S' else false;
+fn has_xmas(puzzle: []u8, col: i32, i: i32, j: i32, di: i32, dj: i32) bool {
+    const word = "XMAS";
 
-    // check up
-    const is_xmas_u = if (i > 3) puzzle[idx] == 'X' and
-        puzzle[idx - lin] == 'M' and
-        puzzle[idx - lin * 2] == 'A' and
-        puzzle[idx - lin * 3] == 'S' else false;
+    var k: i32 = 0;
+    for (word) |c| {
+        const ii = i + k * di;
+        const jj = j + k * dj;
+        const is_in_range = (ii >= 0 and ii < col) and (jj >= 0 and jj < col);
 
-    // check left
-    const is_xmas_l = if (j > 3) puzzle[idx] == 'X' and
-        puzzle[idx - 1] == 'M' and
-        puzzle[idx - 2] == 'A' and
-        puzzle[idx - 3] == 'S' else false;
+        // std.debug.print("ii, jj, k, inrange: {}, {}, {}, {}\n", .{ ii, jj, k, is_in_range });
+        if (!is_in_range) {
+            return false;
+        }
+        const x = get(puzzle, col, ii, jj);
+        // std.debug.print("x: {c}\n", .{x});
+        if (x != c) {
+            return false;
+        }
+        k += 1;
+    }
 
-    // check right down
-    const is_xmas_rd = if (i + 3 < lin and j + 3 < col) puzzle[idx] == 'X' and
-        puzzle[idx + lin * 1 + 1] == 'M' and
-        puzzle[idx + lin * 2 + 2] == 'A' and
-        puzzle[idx + lin * 3 + 3] == 'S' else false;
-
-    // check right up
-    const is_xmas_ru = if (i > 3 and j + 3 < col) puzzle[idx] == 'X' and
-        puzzle[idx - lin * 1 + 1] == 'M' and
-        puzzle[idx - lin * 2 + 2] == 'A' and
-        puzzle[idx - lin * 3 + 3] == 'S' else false;
-
-    // check left up
-    const is_xmas_lu = if (i > 3 and j > 3) puzzle[idx] == 'X' and
-        puzzle[idx - lin * 1 - 1] == 'M' and
-        puzzle[idx - lin * 2 - 2] == 'A' and
-        puzzle[idx - lin * 3 - 3] == 'S' else false;
-
-    // check left down
-    const is_xmas_ld = if (i + 3 < col and j > 3) puzzle[idx] == 'X' and
-        puzzle[idx + lin * 1 - 1] == 'M' and
-        puzzle[idx + lin * 2 - 2] == 'A' and
-        puzzle[idx + lin * 3 - 3] == 'S' else false;
-
-    var res: usize = 0;
-    res += @intFromBool(is_xmas_r);
-    res += @intFromBool(is_xmas_l);
-    res += @intFromBool(is_xmas_u);
-    res += @intFromBool(is_xmas_d);
-    res += @intFromBool(is_xmas_ru);
-    res += @intFromBool(is_xmas_rd);
-    res += @intFromBool(is_xmas_lu);
-    res += @intFromBool(is_xmas_ld);
-
-    return res;
+    return true;
 }
