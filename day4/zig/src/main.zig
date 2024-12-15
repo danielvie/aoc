@@ -25,19 +25,11 @@ pub fn readPuzzle(allocator: std.mem.Allocator, choice: FileChoice) ![]u8 {
 }
 
 fn get_slice(allocator: std.mem.Allocator, puzzle: []const u8) ![]u8 {
-    // counting alphabetic chars
-    var counter: usize = 0;
-    for (puzzle) |c| {
-        if (std.ascii.isAlphabetic(c)) {
-            counter += 1;
-        }
-    }
-
     // allocating buffer
-    var buffer = try allocator.alloc(u8, counter);
+    var buffer = try allocator.alloc(u8, puzzle.len);
 
     // writing flat string
-    counter = 0;
+    var counter: usize = 0;
     for (puzzle) |c| {
         if (std.ascii.isAlphabetic(c)) {
             if (counter < puzzle.len) {
@@ -49,6 +41,7 @@ fn get_slice(allocator: std.mem.Allocator, puzzle: []const u8) ![]u8 {
         }
     }
 
+    buffer = try allocator.realloc(buffer, counter);
     return buffer;
 }
 
@@ -144,19 +137,13 @@ fn has_x_mas(puzzle: []u8, n: i32, i: i32, j: i32) bool {
     }
 
     // reading the diagonals
-    var d1 = [_]u8{ '.', '.' };
-    var d2 = [_]u8{ '.', '.' };
+    const a = [_]u8{ get(puzzle, n, i - 1, j - 1), get(puzzle, n, i + 1, j + 1) };
+    const b = [_]u8{ get(puzzle, n, i - 1, j + 1), get(puzzle, n, i + 1, j - 1) };
 
-    d1[0] = get(puzzle, n, i - 1, j - 1);
-    d1[1] = get(puzzle, n, i + 1, j + 1);
-
-    d2[0] = get(puzzle, n, i - 1, j + 1);
-    d2[1] = get(puzzle, n, i + 1, j - 1);
-
-    // testing if diagonals are valid
-    const c1 = std.mem.eql(u8, &d1, "MS") or std.mem.eql(u8, &d1, "SM");
-    const c2 = std.mem.eql(u8, &d2, "MS") or std.mem.eql(u8, &d2, "SM");
-    const res = c1 and c2;
+    // testing if diagonals are valid (conditions)
+    const ca = std.mem.eql(u8, &a, "MS") or std.mem.eql(u8, &a, "SM");
+    const cb = std.mem.eql(u8, &b, "MS") or std.mem.eql(u8, &b, "SM");
+    const res = ca and cb;
 
     return res;
 }
