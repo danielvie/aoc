@@ -3,7 +3,7 @@ version: '3'
 tasks:
 
   default:
-    deps: [test]
+    deps: [main]
 
   main:
     cmds:
