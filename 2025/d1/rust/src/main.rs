@@ -3,11 +3,21 @@ use std::io;
 
 enum Puzzle {
     Test,
-    Puzzle1,
-    Puzzle2,
+    Puzzle,
 }
 
-fn run_password_1(txt: &String) {
+enum Turn {
+    Left,
+    Right,
+}
+
+fn run_password_1(puzzle: &Puzzle) -> i32 {
+
+    let txt = match file_read(&puzzle) {
+        Ok(txt) => txt,
+        Err(_e) => panic!(),
+    };
+
     let lines = txt.split("\r\n");
     
     let mut value = 50;
@@ -22,7 +32,7 @@ fn run_password_1(txt: &String) {
             Some(c) => c,
             None => {
                 println!("input is empty");
-                return;
+                panic!()
             },
         };
         
@@ -32,7 +42,7 @@ fn run_password_1(txt: &String) {
             Ok(number) => number,
             Err(e) => {
                 println!("something is not right!\ntxt_rest: {:?}\ne: {}", txt_rest, e.to_string());
-                return
+                panic!()
             },
         };
         
@@ -62,26 +72,34 @@ fn run_password_1(txt: &String) {
         println!("value  : {}", value);
         println!("count  : {}\n", count);
     }
+    
+    count
 }
 
-fn run_password_2(txt: &String) {
+fn run_password_2(puzzle: &Puzzle) -> i32 {
+
+    let txt = match file_read(&puzzle) {
+        Ok(txt) => txt,
+        Err(_e) => panic!(),
+    };
+
     let lines = txt.split("\r\n");
     
     let mut value  = 50;
-    let mut value_ = 50;
     let mut count  = 0;
 
     println!("value  : {}", value);
     println!("count  : {}\n", count);
 
     for li in lines {
+
+        let instruction = li.split_at(1);
+
         // get direction
-        let dir = match li.chars().next() {
-            Some(c) => c,
-            None => {
-                println!("input is empty");
-                return;
-            },
+        let dir = match instruction.0 {
+            "L" => Turn::Left,
+            "R" => Turn::Right,
+            _ => panic!(),
         };
         
         // parsing rest of the string
@@ -90,13 +108,13 @@ fn run_password_2(txt: &String) {
             Ok(number) => number,
             Err(e) => {
                 println!("something is not right!\ntxt_rest: {:?}\ne: {}", txt_rest, e.to_string());
-                return
+                panic!()
             },
         };
         
         match dir {
-            'R' => {
-                for _ in 1..num {
+            Turn::Right => {
+                for _ in 0..num {
                     value += 1;
                     if value > 99 {
                         value = 0;
@@ -107,8 +125,8 @@ fn run_password_2(txt: &String) {
                     }
                 }
             },
-            'L' => {
-                for _ in 1..num {
+            Turn::Left => {
+                for _ in 0..num {
                     value -= 1;
                     if value < 0 {
                         value = 99;
@@ -119,31 +137,21 @@ fn run_password_2(txt: &String) {
                     }
                 }
             },
-            _ => {}
         }
-        
-
-        value_ = value;
         
         // print results
         println!("dial is rotated {} to point at {}", li, value);
         println!("value  : {}", value);
-        println!("value_ : {}", value_);
         println!("count  : {}\n", count);
     }
+    
+    count
 }
 
 
 fn main() {
-    match file_read(&Puzzle::Puzzle1) {
-        Ok(txt) => {
-            // run_password_1(&txt);
-            run_password_2(&txt);
-        }
-        Err(e) => {
-            eprintln!("niet ok\n{}", e.to_string());
-        }
-    }
+    // run_password_1(&Puzzle::Test);
+    run_password_2(&Puzzle::Puzzle);
 }
 
 fn file_read(puzzle: &Puzzle) -> Result<String, io::Error> {
@@ -151,11 +159,42 @@ fn file_read(puzzle: &Puzzle) -> Result<String, io::Error> {
 
     let file = match puzzle {
         Puzzle::Test => "data/test.txt",
-        Puzzle::Puzzle1 => "data/puzzle1.txt",
-        Puzzle::Puzzle2 => "data/puzzle2.txt",
+        Puzzle::Puzzle => "data/puzzle.txt",
     };
 
     let txt = fs::read_to_string(file)?;
     Ok(txt)
 }
 
+
+#[cfg(test)]
+mod tests {
+    // This brings all items from the outer module (like the `add` function)
+    // into the scope of the test module.
+    use super::*;
+
+    #[test]
+    fn part1_test() {
+        // Assertions are used to check for expected results.
+        assert_eq!(run_password_1(&Puzzle::Test), 3);
+    }
+
+    #[test]
+    fn part2_test() {
+        // You can use `assert!` for boolean checks
+        assert_eq!(run_password_2(&Puzzle::Test), 6);
+    }
+
+    #[test]
+    fn part1() {
+        // You can use `assert!` for boolean checks
+        assert_eq!(run_password_1(&Puzzle::Puzzle), 1043);
+    }
+
+    #[test]
+    fn part2() {
+        // You can use `assert!` for boolean checks
+        assert_eq!(run_password_2(&Puzzle::Puzzle), 5963);
+    }
+
+}

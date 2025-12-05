@@ -9,3 +9,8 @@ tasks:
     aliases: [m]
     cmds:
      - cargo run
+
+  test:
+    aliases: [t]
+    cmds:
+     - cargo test
