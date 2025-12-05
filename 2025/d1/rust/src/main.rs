@@ -1,200 +1,174 @@
 use std::fs;
 use std::io;
+use std::error::Error;
 
+// --- Enums and Structs ---
+
+#[derive(Debug)]
 enum Puzzle {
     Test,
     Puzzle,
 }
 
+#[derive(Debug)]
 enum Turn {
     Left,
     Right,
 }
 
-fn run_password_1(puzzle: &Puzzle) -> i32 {
-
-    let txt = match file_read(&puzzle) {
-        Ok(txt) => txt,
-        Err(_e) => panic!(),
-    };
-
-    let lines = txt.split("\r\n");
-    
-    let mut value = 50;
-    let mut count = 0;
-
-    println!("value  : {}\n", value);
-
-    for li in lines {
-        // get direction
-        //
-        let dir = match li.chars().next() {
-            Some(c) => c,
-            None => {
-                println!("input is empty");
-                panic!()
-            },
-        };
-        
-        // parsing rest of the string
-        let txt_rest = &li[1..];
-        let num = match txt_rest.trim().parse::<i32>() {
-            Ok(number) => number,
-            Err(e) => {
-                println!("something is not right!\ntxt_rest: {:?}\ne: {}", txt_rest, e.to_string());
-                panic!()
-            },
-        };
-        
-        match dir {
-            'R' => {
-                value += num;
-                while value > 99 {
-                    value -= 100;
-                }
-            }
-            'L' =>  {
-                value -= num;
-                while value < 0 {
-                    value += 100;
-                }
-
-            }
-            _ => {}
-        }
-        
-
-        if value == 0 {
-            count += 1;
-        }
-        
-        println!("command: {}", li);
-        println!("value  : {}", value);
-        println!("count  : {}\n", count);
-    }
-    
-    count
+#[derive(Debug)]
+struct Rotation {
+    turn: Turn,
+    distance: i32,
 }
 
-fn run_password_2(puzzle: &Puzzle) -> i32 {
-
-    let txt = match file_read(&puzzle) {
-        Ok(txt) => txt,
-        Err(_e) => panic!(),
-    };
-
-    let lines = txt.split("\r\n");
-    
-    let mut value  = 50;
-    let mut count  = 0;
-
-    println!("value  : {}", value);
-    println!("count  : {}\n", count);
-
-    for li in lines {
-
-        let instruction = li.split_at(1);
-
-        // get direction
-        let dir = match instruction.0 {
-            "L" => Turn::Left,
-            "R" => Turn::Right,
-            _ => panic!(),
-        };
-        
-        // parsing rest of the string
-        let txt_rest = &li[1..];
-        let num = match txt_rest.trim().parse::<i32>() {
-            Ok(number) => number,
-            Err(e) => {
-                println!("something is not right!\ntxt_rest: {:?}\ne: {}", txt_rest, e.to_string());
-                panic!()
-            },
-        };
-        
-        match dir {
-            Turn::Right => {
-                for _ in 0..num {
-                    value += 1;
-                    if value > 99 {
-                        value = 0;
-                    }
-                    
-                    if value == 0 {
-                        count += 1;
-                    }
-                }
-            },
-            Turn::Left => {
-                for _ in 0..num {
-                    value -= 1;
-                    if value < 0 {
-                        value = 99;
-                    }
-                    
-                    if value == 0 {
-                        count += 1;
-                    }
-                }
-            },
-        }
-        
-        // print results
-        println!("dial is rotated {} to point at {}", li, value);
-        println!("value  : {}", value);
-        println!("count  : {}\n", count);
-    }
-    
-    count
-}
-
-
-fn main() {
-    // run_password_1(&Puzzle::Test);
-    run_password_2(&Puzzle::Puzzle);
-}
-
+// reads file content
 fn file_read(puzzle: &Puzzle) -> Result<String, io::Error> {
-    // let path = "data/test.txt";
-
     let file = match puzzle {
         Puzzle::Test => "data/test.txt",
         Puzzle::Puzzle => "data/puzzle.txt",
     };
 
-    let txt = fs::read_to_string(file)?;
-    Ok(txt)
+    fs::read_to_string(file)
+}
+
+// parses line into a rotation struct
+fn parse_line(line: &str) -> Result<Rotation, String> {
+    let line = line.trim();
+    if line.is_empty() {
+        return Err("Empty line".to_string());
+    }
+
+    let (dir_char, num_str) = line.split_at(1);
+    
+    let turn = match dir_char {
+        "L" => Turn::Left,
+        "R" => Turn::Right,
+        _ => return Err(format!("Invalid direction: {}", dir_char)),
+    };
+    
+    let distance = num_str.trim().parse::<i32>().map_err(|e| format!("Invalid distance '{}': {}", num_str, e))?;
+
+    Ok(Rotation { turn, distance })
+}
+
+// parses the entire file content into a vector of rotation instructions
+fn parse_input(txt: &str) -> Result<Vec<Rotation>, String> {
+    txt.split_terminator('\n')
+       .filter(|s| !s.trim().is_empty())
+       .map(|line| parse_line(line.trim_end_matches('\r')))
+       .collect()
+}
+
+
+// part 1
+fn run_password_1(rotations: &[Rotation]) -> i32 {
+
+    let mut value = 50;
+    let mut count = 0;
+    let modulo: i32 = 100;
+
+    for rotation in rotations {
+        // Calculate the new value
+        match rotation.turn {
+            Turn::Right => value += rotation.distance,
+            Turn::Left => value -= rotation.distance,
+        }
+
+        // apply modulo
+        value = value % modulo;
+        if value < 0 {
+            value += modulo;
+        }
+        
+        if value == 0 {
+            count += 1;
+        }
+    }
+    
+    count
+}
+
+// part 2
+fn run_password_2(rotations: &[Rotation]) -> i32 {
+
+    let mut value  = 50;
+    let mut count  = 0;
+
+    for rotation in rotations {
+        
+        let v_calc = if value == 0 { 100 } else { value };
+
+        match rotation.turn {
+            Turn::Right => {
+                let crossing = (v_calc + rotation.distance) / 100 - (v_calc / 100);
+                count += crossing;
+                
+                value = (value + rotation.distance) % 100;
+            },
+            Turn::Left => {
+                let dist_to_zero = v_calc;
+                
+                if rotation.distance >= dist_to_zero {
+                    let remaining_dist = rotation.distance - dist_to_zero;
+                    count += 1 + (remaining_dist / 100);
+                }
+                
+                value = ((value - rotation.distance) % 100 + 100) % 100;
+            },
+        }
+    }
+    
+    count
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
+    
+    let txt = file_read(&Puzzle::Puzzle)?;
+    let rotations = parse_input(&txt).map_err(Box::<dyn Error>::from)?;
+
+    let result_1 = run_password_1(&rotations);
+    println!("Part 1 Result (1043): {}", result_1);
+    
+    let result_2 = run_password_2(&rotations);
+    println!("Part 2 Result (5963): {}", result_2);
+
+    Ok(())
 }
 
 
 #[cfg(test)]
 mod tests {
-    // This brings all items from the outer module (like the `add` function)
-    // into the scope of the test module.
     use super::*;
+
+    fn get_test_rotations() -> Vec<Rotation> {
+        let txt = file_read(&Puzzle::Test).unwrap();
+        parse_input(&txt).unwrap()
+    }
+    
+    fn get_puzzle_rotations() -> Vec<Rotation> {
+        let txt = file_read(&Puzzle::Puzzle).unwrap();
+        parse_input(&txt).unwrap()
+    }
+
 
     #[test]
     fn part1_test() {
-        // Assertions are used to check for expected results.
-        assert_eq!(run_password_1(&Puzzle::Test), 3);
+        assert_eq!(run_password_1(&get_test_rotations()), 3);
     }
 
     #[test]
     fn part2_test() {
-        // You can use `assert!` for boolean checks
-        assert_eq!(run_password_2(&Puzzle::Test), 6);
+        assert_eq!(run_password_2(&get_test_rotations()), 6);
     }
 
     #[test]
     fn part1() {
-        // You can use `assert!` for boolean checks
-        assert_eq!(run_password_1(&Puzzle::Puzzle), 1043);
+        assert_eq!(run_password_1(&get_puzzle_rotations()), 1043);
     }
 
     #[test]
     fn part2() {
-        // You can use `assert!` for boolean checks
-        assert_eq!(run_password_2(&Puzzle::Puzzle), 5963);
+        assert_eq!(run_password_2(&get_puzzle_rotations()), 5963);
     }
-
 }
