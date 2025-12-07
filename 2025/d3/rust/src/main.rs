@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use std::fs;
 
 enum Source {
@@ -44,7 +43,7 @@ fn part1(source: &Source) -> u64 {
     results.iter().sum()
 }
 
-fn max_finder(line: &str, pointers: &mut Vec<usize>, pos: usize) {
+fn p2helper_max_finder(line: &str, pointers: &mut Vec<usize>, pos: usize) {
     let end = pointers[pos];
 
     // computing ini
@@ -72,14 +71,15 @@ fn max_finder(line: &str, pointers: &mut Vec<usize>, pos: usize) {
 }
 
 // picker
-fn picker(line: &str, pts: &Vec<usize>) -> u64 {
+fn p2helper_picker(line: &str, pts: &Vec<usize>) -> u64 {
     let mut pick = Vec::new();
     for p in pts {
         let char = line.trim().chars().nth(*p as usize);
         pick.push(char.unwrap());
     }
 
-    let result = pick.iter().join("").parse().unwrap();
+   let result: u64 = pick.iter().collect::<String>().parse().unwrap(); 
+
     result
 }
 
@@ -109,10 +109,10 @@ fn part2(source: &Source, number_of_elements: usize) -> u64 {
         }
 
         for i in 0..n {
-            max_finder(&line, &mut pointers, i);
+            p2helper_max_finder(&line, &mut pointers, i);
         }
 
-        let value = picker(&line, &pointers);
+        let value = p2helper_picker(&line, &pointers);
 
         result.push(value);
     }
