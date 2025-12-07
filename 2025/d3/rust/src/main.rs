@@ -1,5 +1,5 @@
-use std::{fs, vec};
 use itertools::Itertools;
+use std::fs;
 
 enum Source {
     TEST,
@@ -21,7 +21,7 @@ fn part1(source: &Source) -> u64 {
 
     let mut results: Vec<u64> = Vec::new();
 
-    for (i, line) in input.lines().enumerate() {
+    for line in input.lines() {
         let mut value = 0;
         for i in 0..line.len() {
             bl = &line[i..i + 1];
@@ -44,149 +44,98 @@ fn part1(source: &Source) -> u64 {
     results.iter().sum()
 }
 
-fn pick_increment(v: &mut Vec<u64>, lim: u64) -> bool {
-    let n = v.len();
-    
-    v[n-1] += 1;
-    
-    // adjust overflow
-    for i in 0..n {
-        let ii = n - i - 1;
-        
-        if v[ii] > lim {
-            v[ii] = 0;
-            v[ii - 1] += 1;
+fn max_finder(line: &str, pointers: &mut Vec<usize>, pos: usize) {
+    let end = pointers[pos];
+
+    // computing ini
+    let mut ini = 0;
+    if pos > 0 {
+        ini = pointers[pos - 1] + 1;
+    }
+
+    // moving to left
+    let mut maxi = end;
+    let mut max = line.chars().nth(maxi).unwrap().to_digit(10).unwrap() as usize;
+    let mut p = maxi;
+
+    for _ in ini..end {
+        p -= 1;
+        let n: usize = line.chars().nth(p).unwrap().to_digit(10).unwrap() as usize;
+
+        if max <= n {
+            max = n;
+            maxi = p;
         }
     }
-    
-    let mut refe = 0;
-    for i in 0..v.len() {
-        let ii = n - i - 1;
-    }
 
-    let total: u64 = v.iter().sum();
-
-    false
+    pointers[pos] = maxi;
 }
 
-fn pick_n(line: &str, n: u64) -> Vec<Vec<u64>> {
-    
-    let mut pool = Vec::new();
-    
-    for i in 0..line.len() {
-        pool.push(i);
+// picker
+fn picker(line: &str, pts: &Vec<usize>) -> u64 {
+    let mut pick = Vec::new();
+    for p in pts {
+        let char = line.trim().chars().nth(*p as usize);
+        pick.push(char.unwrap());
     }
 
-    let n = line.len() as u64;
-    println!("line.len(): {}", n);
-
-    let mut pointers = Vec::new();
-    for i in 0..2 {
-        pointers.push(i);
-    }
-    
-    let mut result = Vec::new();
-    for _ in 0..5*n {
-        result.push(pointers.clone());
-        pick_increment(&mut pointers, n);
-    }
-    
-    println!("result: {:?}", result);
-
+    let result = pick.iter().join("").parse().unwrap();
     result
 }
 
+fn part2(source: &Source, number_of_elements: usize) -> u64 {
+    let input = read_file(source);
+    let n = number_of_elements;
 
+    // start pointers
+    let mut pointers: Vec<usize> = Vec::new();
 
-fn increment_helper(pointers: &mut Vec<u64>, max: usize, pos: usize) -> bool {
-
-    if pos == 0 && (pointers[pos] > max as u64) {
-        return false;
-    }
-
-    pointers[pos] += 1;
-    
-    if pointers[pos] > max as u64 {
-        if pos == 0 {
-            return false;
-        }
-        let success = increment_helper(pointers, max-1, pos-1);
-        if !success {
-            return false;
-        }
-
-        pointers[pos] = pointers[pos-1]+1;
-    }
-    
-    true
-}
-
-fn increment(pt: &mut Vec<u64>, max: usize) -> bool {
-    let pos = pt.len()-1;
-
-    increment_helper(pt, max, pos)
-}
-
-fn part2(source: &Source) -> u64 {
-    
-    // initialize pointers
-    let mut pointers: Vec<u64> = Vec::new();
-    let n = 2;
     for i in 0..n {
         pointers.push(i);
     }
-    
-    // create pool
-    let pool = vec![0,1,2,3,4,5];
 
-    // picker
-    let picker = |pool_: &Vec<u64>, pts: &Vec<u64>| -> Vec<u64> {
-        let mut pick = Vec::new();
-        for p in pts {
-            pick.push(pool_[*p as usize]);
+    let mut result: Vec<u64> = Vec::new();
+    for line in input.lines() {
+        // move pointers to end of line
+        let line_len = line.len();
+
+        for i in 0..n {
+            pointers[i] = i;
         }
-        
-        pick
-    };
-    
 
-    let mut pick = picker(&pool, &pointers);
-
-    // increment pointers
-
-    println!("pointers: {:?}", pointers);
-    for _ in 0..20 {
-        let res = increment(&mut pointers, 5);
-        if res == false {
-            break;
+        let dif = line_len - pointers.len();
+        for i in 0..pointers.len() {
+            pointers[i] += dif;
         }
-        println!("pointers: {:?}", pointers);
+
+        for i in 0..n {
+            max_finder(&line, &mut pointers, i);
+        }
+
+        let value = picker(&line, &pointers);
+
+        result.push(value);
     }
 
-    // pick = picker(&pool, &pointers);
+    let soma = result.iter().sum();
 
-    // println!("pointers: {:?}", pointers);
-    // println!("pool    : {:?}", pool);
-    // println!("pick    : {:?}", pick);
-
-
-    100
+    soma
 }
 
 fn main() {
-    // let r1_t = part1(&Source::TEST);
-    let r2_t = part2(&Source::TEST);
+    let r1_t = part1(&Source::TEST);
+    let r2_t = part2(&Source::TEST, 12);
 
-    // let r1_p = part1(&Source::PUZZLE);
-    // let r2_p = part2(&Source::PUZZLE);
+    let r1_p = part1(&Source::PUZZLE);
+    let r2_p = part2(&Source::PUZZLE, 12);
 
-    // println!("TEST");
-    // println!("result part1: {}", r1_t);
+    println!("\nTEST");
+    println!("result part1: {}", r1_t);
     println!("result part2: {}", r2_t);
 
-    // println!("PUZZLE");
-    // println!("result part1: {}", r1_p);
-    // println!("result part2: {}", r2_p);
+    println!("\nPUZZLE");
+    println!("result part1: {}", r1_p);
+    println!("result part2: {}", r2_p);
 }
 
 #[cfg(test)]
@@ -200,6 +149,13 @@ mod tests {
 
     #[test]
     fn part2_test() {
-        assert_eq!(part2(&Source::TEST), 3121910778619)
+        assert_eq!(part2(&Source::TEST, 12), 3121910778619)
+    }
+
+    #[test]
+    fn part2_test_with_2() {
+        assert_eq!(part2(&Source::TEST, 2), 357)
     }
 }
+
+// line 4: 976546353526
