@@ -1,4 +1,4 @@
-use std::{fs};
+use std::fs;
 
 enum Source {
     TEST,
@@ -11,15 +11,10 @@ struct Range {
 }
 
 fn read_file(source: &Source) -> String {
-    let content = match source {
-        Source::TEST => fs::read_to_string("data/test.txt"),
-        Source::PUZZLE => fs::read_to_string("data/puzzle.txt"),
-    };
-    
-    match content {
-        Ok(s) => s,
-        Err(e) => panic!("problem here: {}", e)
-    }
+    match source {
+        Source::TEST => fs::read_to_string("data/test.txt").expect("should read TEST file"),
+        Source::PUZZLE => fs::read_to_string("data/puzzle.txt").expect("should read PUZZLE file"),
+    }.trim().replace("\r\n", "")
 }
 
 fn check_isvalid(n: u32) -> bool {
@@ -45,17 +40,6 @@ fn check_range(item: &Range) -> u32 {
         if check_isvalid(n) {
             invalid.push(n);
         }
-    }
-    
-    print!("- {}-{}", item.ini, item.end);
-    if invalid.len() == 0 {
-        println!(" contains no invalid IDs");
-    } else {
-        print!(" contains {} invalid: ", invalid.len());
-        for ii in &invalid {
-            print!("{}, ", ii);
-        }
-        print!("\n");
     }
     
     invalid.iter().sum()
@@ -87,98 +71,60 @@ fn check_range_part2(item: &Range) -> u32 {
         }
     }
     
-    print!("- {}-{}", item.ini, item.end);
-    if invalid.len() == 0 {
-        println!(" contains no invalid IDs");
-    } else {
-        print!(" contains {} invalid: ", invalid.len());
-        for ii in &invalid {
-            print!("{}, ", ii);
-        }
-        print!("\n");
-    }
-    
     invalid.iter().sum()
 }
 
-fn part1(source: &Source) -> u64 {
-    let content = read_file(&source);
-    
-    let mut ranges: Vec<Range> = Vec::new();
-
-    let lines = content.lines();
-    for li in lines {
-        let rr = li.split(",");
-        
-        for ri in rr {
-            if ri == "" {
-                continue;
-            }
-
-            let mut parts = ri.split('-');
-            
-            // get parts
-            let ini_s = parts.next().unwrap_or_default();
-            let end_s = parts.next().unwrap_or_default();
-            
-            let ini = ini_s.parse::<u32>().unwrap();
-            let end = end_s.parse::<u32>().unwrap();
-
-            ranges.push(Range {ini, end});
-        }
-    }
-    
+fn part1(ranges: &Vec<Range>) -> u64 {
     let mut result:u64 = 0;
     for ri in ranges {
-        // println!("{} .. {}", ri.ini, ri.end);
         result += check_range(&ri) as u64;
     }
-    
-    println!("\nresult: {}", result);
     
     result
 }
 
-fn part2(source: &Source) -> u64 {
-    let content = read_file(&source);
-    
-    let mut ranges: Vec<Range> = Vec::new();
-
-    let lines = content.lines();
-    for li in lines {
-        let rr = li.split(",");
-        
-        for ri in rr {
-            if ri == "" {
-                continue;
-            }
-
-            let mut parts = ri.split('-');
-            
-            // get parts
-            let ini_s = parts.next().unwrap_or_default();
-            let end_s = parts.next().unwrap_or_default();
-            
-            let ini = ini_s.parse::<u32>().unwrap();
-            let end = end_s.parse::<u32>().unwrap();
-
-            ranges.push(Range {ini, end});
-        }
-    }
-    
+fn part2(ranges: &Vec<Range>) -> u64 {
     let mut result:u64 = 0;
     for ri in ranges {
         result += check_range_part2(&ri) as u64;
     }
     
-    println!("\nresult: {}", result);
-    
     result
 }
 
+fn parse_input(input: &str) -> Vec<Range> {
+    input
+        .trim()
+        .split(',')
+        .map(|segment| {
+            let mut parts = segment.split('-');
+            let ini = parts.next().unwrap().parse().unwrap();
+            let end = parts.next().unwrap().parse().unwrap();
+            Range {ini, end}
+        })
+        .collect()
+}
+
 fn main() {
-    part1(&Source::TEST);
-    part2(&Source::PUZZLE);
+    let input_test = read_file(&Source::TEST);
+    let input_puzzle = read_file(&Source::PUZZLE);
+
+    let ranges_t = parse_input(&input_test);
+    let ranges_p = parse_input(&input_puzzle);
+    
+    let r1_t = part1(&ranges_t);
+    let r2_t = part2(&ranges_t);
+
+    let r1_p = part1(&ranges_p);
+    let r2_p = part2(&ranges_p);
+    
+    println!("TEST");
+    println!("result part1: {}", r1_t);
+    println!("result part2: {}", r2_t);
+
+    println!("PUZZLE");
+    println!("result part1: {}", r1_p);
+    println!("result part2: {}", r2_p);
 }
 
 #[cfg(test)]
@@ -187,12 +133,16 @@ mod tests {
     
     #[test]
     fn part1_test() {
-        assert_eq!(part1(&Source::TEST), 1227775554)
+        let input = read_file(&Source::TEST);
+        let ranges = parse_input(&input);
+        assert_eq!(part1(&ranges), 1227775554)
     }
 
     #[test]
     fn part2_test() {
-        assert_eq!(part2(&Source::TEST), 4174379265)
+        let input = read_file(&Source::TEST);
+        let ranges = parse_input(&input);
+        assert_eq!(part2(&ranges), 4174379265)
     }
 
 }
