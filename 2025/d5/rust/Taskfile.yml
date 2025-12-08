@@ -1,0 +1,17 @@
+version: '3'
+
+tasks:
+
+  default:
+    deps: [main]
+
+  main:
+    aliases: [m]
+    cmds:
+     - powershell clear
+     - cargo run
+
+  test:
+    aliases: [t]
+    cmds:
+     - cargo test
