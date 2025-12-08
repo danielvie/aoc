@@ -1,172 +1,54 @@
---- Day 4: Printing Department ---
-You ride the escalator down to the printing department. They're clearly getting ready for Christmas; they have lots of large rolls of paper everywhere, and there's even a massive printer in the corner (to handle the really big print jobs).
+--- Day 5: Cafeteria ---
+As the forklifts break through the wall, the Elves are delighted to discover that there was a cafeteria on the other side after all.
 
-Decorating here will be easy: they can make their own decorations. What you really need is a way to get further into the North Pole base while the elevators are offline.
+You can hear a commotion coming from the kitchen. "At this rate, we won't have any time left to put the wreaths up in the dining hall!" Resolute in your quest, you investigate.
 
-"Actually, maybe we can help with that," one of the Elves replies when you ask for help. "We're pretty sure there's a cafeteria on the other side of the back wall. If we could break through the wall, you'd be able to keep moving. It's too bad all of our forklifts are so busy moving those big rolls of paper around."
+"If only we hadn't switched to the new inventory management system right before Christmas!" another Elf exclaims. You ask what's going on.
 
-If you can optimize the work the forklifts are doing, maybe they would have time to spare to break through the wall.
+The Elves in the kitchen explain the situation: because of their complicated new inventory management system, they can't figure out which of their ingredients are fresh and which are spoiled. When you ask how it works, they give you a copy of their database (your puzzle input).
 
-The rolls of paper (@) are arranged on a large grid; the Elves even have a helpful diagram (your puzzle input) indicating where everything is located.
+The database operates on ingredient IDs. It consists of a list of fresh ingredient ID ranges, a blank line, and a list of available ingredient IDs. For example:
 
-For example:
+3-5
+10-14
+16-20
+12-18
 
-..@@.@@@@.
-@@@.@.@.@@
-@@@@@.@.@@
-@.@@@@..@.
-@@.@@@@.@@
-.@@@@@@@.@
-.@.@.@.@@@
-@.@@@.@@@@
-.@@@@@@@@.
-@.@.@@@.@.
-The forklifts can only access a roll of paper if there are fewer than four rolls of paper in the eight adjacent positions. If you can figure out which rolls of paper the forklifts can access, they'll spend less time looking and more time breaking down the wall to the cafeteria.
+1
+5
+8
+11
+17
+32
+The fresh ID ranges are inclusive: the range 3-5 means that ingredient IDs 3, 4, and 5 are all fresh. The ranges can also overlap; an ingredient ID is fresh if it is in any range.
 
-In this example, there are 13 rolls of paper that can be accessed by a forklift (marked with x):
+The Elves are trying to determine which of the available ingredient IDs are fresh. In this example, this is done as follows:
 
-..xx.xx@x.
-x@@.@.@.@@
-@@@@@.x.@@
-@.@@@@..@.
-x@.@@@@.@x
-.@@@@@@@.@
-.@.@.@.@@@
-x.@@@.@@@@
-.@@@@@@@@.
-x.x.@@@.x.
-Consider your complete diagram of the paper roll locations. How many rolls of paper can be accessed by a forklift?
+Ingredient ID 1 is spoiled because it does not fall into any range.
+Ingredient ID 5 is fresh because it falls into range 3-5.
+Ingredient ID 8 is spoiled.
+Ingredient ID 11 is fresh because it falls into range 10-14.
+Ingredient ID 17 is fresh because it falls into range 16-20 as well as range 12-18.
+Ingredient ID 32 is spoiled.
+So, in this example, 3 of the available ingredient IDs are fresh.
 
-Your puzzle answer was 1543.
+Process the database file from the new inventory management system. How many of the available ingredient IDs are fresh?
+
+Your puzzle answer was 613.
 
 --- Part Two ---
-Now, the Elves just need help accessing as much of the paper as they can.
+The Elves start bringing their spoiled inventory to the trash chute at the back of the kitchen.
 
-Once a roll of paper can be accessed by a forklift, it can be removed. Once a roll of paper is removed, the forklifts might be able to access more rolls of paper, which they might also be able to remove. How many total rolls of paper could the Elves remove if they keep repeating this process?
+So that they can stop bugging you when they get new inventory, the Elves would like to know all of the IDs that the fresh ingredient ID ranges consider to be fresh. An ingredient ID is still considered fresh if it is in any range.
 
-Starting with the same example as above, here is one way you could remove as many rolls of paper as possible, using highlighted @ to indicate that a roll of paper is about to be removed, and using x to indicate that a roll of paper was just removed:
+Now, the second section of the database (the available ingredient IDs) is irrelevant. Here are the fresh ingredient ID ranges from the above example:
 
-Initial state:
-..@@.@@@@.
-@@@.@.@.@@
-@@@@@.@.@@
-@.@@@@..@.
-@@.@@@@.@@
-.@@@@@@@.@
-.@.@.@.@@@
-@.@@@.@@@@
-.@@@@@@@@.
-@.@.@@@.@.
+3-5
+10-14
+16-20
+12-18
+The ingredient IDs that these ranges consider to be fresh are 3, 4, 5, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, and 20. So, in this example, the fresh ingredient ID ranges consider a total of 14 ingredient IDs to be fresh.
 
-Remove 13 rolls of paper:
-..xx.xx@x.
-x@@.@.@.@@
-@@@@@.x.@@
-@.@@@@..@.
-x@.@@@@.@x
-.@@@@@@@.@
-.@.@.@.@@@
-x.@@@.@@@@
-.@@@@@@@@.
-x.x.@@@.x.
+Process the database file again. How many ingredient IDs are considered to be fresh according to the fresh ingredient ID ranges?
 
-Remove 12 rolls of paper:
-.......x..
-.@@.x.x.@x
-x@@@@...@@
-x.@@@@..x.
-.@.@@@@.x.
-.x@@@@@@.x
-.x.@.@.@@@
-..@@@.@@@@
-.x@@@@@@@.
-....@@@...
-
-Remove 7 rolls of paper:
-..........
-.x@.....x.
-.@@@@...xx
-..@@@@....
-.x.@@@@...
-..@@@@@@..
-...@.@.@@x
-..@@@.@@@@
-..x@@@@@@.
-....@@@...
-
-Remove 5 rolls of paper:
-..........
-..x.......
-.x@@@.....
-..@@@@....
-...@@@@...
-..x@@@@@..
-...@.@.@@.
-..x@@.@@@x
-...@@@@@@.
-....@@@...
-
-Remove 2 rolls of paper:
-..........
-..........
-..x@@.....
-..@@@@....
-...@@@@...
-...@@@@@..
-...@.@.@@.
-...@@.@@@.
-...@@@@@x.
-....@@@...
-
-Remove 1 roll of paper:
-..........
-..........
-...@@.....
-..x@@@....
-...@@@@...
-...@@@@@..
-...@.@.@@.
-...@@.@@@.
-...@@@@@..
-....@@@...
-
-Remove 1 roll of paper:
-..........
-..........
-...x@.....
-...@@@....
-...@@@@...
-...@@@@@..
-...@.@.@@.
-...@@.@@@.
-...@@@@@..
-....@@@...
-
-Remove 1 roll of paper:
-..........
-..........
-....x.....
-...@@@....
-...@@@@...
-...@@@@@..
-...@.@.@@.
-...@@.@@@.
-...@@@@@..
-....@@@...
-
-Remove 1 roll of paper:
-..........
-..........
-..........
-...x@@....
-...@@@@...
-...@@@@@..
-...@.@.@@.
-...@@.@@@.
-...@@@@@..
-....@@@...
-Stop once no more rolls of paper are accessible by a forklift. In this example, a total of 43 rolls of paper can be removed.
-
-Start with your original diagram. How many rolls of paper in total can be removed by the Elves and their forklifts?
-
-Your puzzle answer was 9038.
+Your puzzle answer was 336495597913098.
