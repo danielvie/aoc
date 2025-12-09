@@ -5,10 +5,11 @@ enum Source {
     PUZZLE,
 }
 
-#[derive(Debug)]
-enum Operation {
-    Mult(Vec<usize>),
-    Sum(Vec<usize>),
+#[derive(Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
+struct Beam {
+    i: usize,
+    j: usize,
+    n: usize,
 }
 
 fn read_input(source: &Source) -> String {
@@ -28,39 +29,57 @@ fn helper_data_print(data: &Vec<String>) {
     print!("\n");
 }
 
-fn helper_beams_increment(beams: &mut Vec<(usize, usize)>) {
+fn helper_beams_increment(beams: &mut Vec<Beam>) {
     for i in 0..beams.len() {
-        beams[i].0 += 1;
+        beams[i].i += 1;
     }
 }
 
-fn helper_beams_propagate(data: &mut Vec<String>, beams: &mut Vec<(usize, usize)>, count: &mut usize) {
-    for i in 0..beams.len() {
+fn helper_beams_combine(beams: &mut Vec<Beam>) {
+    let mut remove_items = Vec::new();
+    let len = beams.len();
+    for i in 0..len {
         let bi = beams[i];
-        
-        // get element
-        let c = helper_get_element(&data, bi.0, bi.1);
+        for j in 0..len {
+            if i == j {
+                continue;
+            }
 
-        if c == '.' {
-            helper_set_elemenet(data, bi.0, bi.1);
-        } else if c == '^' {
-            println!("hit ^: ({}, {})", bi.0, bi.1);
-            beams[i].1 -= 1;
-            
-            let mut bnew = bi.clone();
-            bnew.1 += 1;
-            beams.push(bnew);
-            
-            *count += 1;
+            let bj = beams[j];
+            if bi.i == bj.i && bi.j == bj.j {
+
+                beams[i].n = beams[i].n + bj.n;
+                beams[j].n = 0;
+                
+                remove_items.push(j);
+            }
         }
     }
     
-    // make beams unique
-    let beams_unique: HashSet<(usize, usize)> = beams.iter().cloned().collect();
-    let mut beams_ordered: Vec<(usize, usize)> = beams_unique.into_iter().collect(); 
-    beams_ordered.sort();
+    beams.retain(|b| b.n != 0);
+}
+
+fn helper_beams_propagate(data: &mut Vec<String>, beams: &mut Vec<Beam>, count_splits: &mut usize) {
+
+    for i in 0..beams.len() {
+        let bi = beams[i];
+        
+        let c = helper_get_element(&data, bi.i, bi.j);
+
+        if c == '.' {
+            helper_set_elemenet(data, bi.i, bi.j);
+        } else if c == '^' {
+            beams[i].j -= 1;
+            
+            let mut bnew = bi.clone();
+            bnew.j += 1;
+            beams.push(bnew);
+            
+            *count_splits += 1;
+        }
+    }
     
-    *beams = beams_ordered;
+    helper_beams_combine(beams);
 }
 
 fn helper_get_element(data: &Vec<String>, i: usize, j: usize) -> char {
@@ -90,17 +109,16 @@ fn part1(source: &Source) -> usize {
     }
     
     let len_i = data.len();
-    let len_j = data[0].chars().count();
+    // let len_j = data[0].chars().count();
     
     
     // find position of S
     let beam_j = data[0].chars().position(|c| c == 'S').unwrap();
-    let mut beams: Vec<(usize, usize)> = Vec::new();
+    let mut beams: Vec<Beam> = Vec::new();
 
-    beams.push((0, beam_j));
+    beams.push(Beam {i: 0, j: beam_j, n: 1});
     
     // propagate beam
-
     let mut count_splits = 0;
     for _ in 0..len_i {
         helper_beams_increment(&mut beams);
@@ -110,24 +128,60 @@ fn part1(source: &Source) -> usize {
     }
     
     println!("count: {}", count_splits);
-    println!("beams({}): {:?}", beams.len(), beams);
+    println!("beams.len(): {}", beams.len());
 
-    let beams_unique: HashSet<(usize, usize)> = beams.into_iter().collect();
+    let beams_unique: HashSet<Beam> = beams.into_iter().collect();
     println!("beams_unique({}): {:?}", beams_unique.len(), beams_unique);
 
+    let result = count_splits;
 
-    100
+    result
 }
 
 fn part2(source: &Source) -> usize {
-    println!("part2");
+    let content = read_input(source);
+    
 
-    200
+    // find sizes
+    let mut data = Vec::new();
+    
+    for line in content.lines() {
+        data.push(line.to_string());
+    }
+    
+    let len_i = data.len();
+    
+    
+    // find position of S
+    let beam_j = data[0].chars().position(|c| c == 'S').unwrap();
+    let mut beams: Vec<Beam> = Vec::new();
+
+    beams.push(Beam {i: 0, j: beam_j, n: 1});
+    
+    // propagate beam
+
+    let mut count_splits = 0;
+    for _ in 0..len_i {
+        helper_beams_increment(&mut beams);
+        helper_beams_propagate(&mut data, &mut beams, &mut count_splits);
+            
+        // helper_data_print(&data);
+    }
+    
+    let beams_n_sum: usize = beams.iter().map(|b| b.n).sum();
+
+    println!("count: {}", count_splits);
+    println!("beams.len(): {}", beams.len());
+    println!("beams.n.sum(): {}", beams_n_sum);
+
+    let result = beams_n_sum;
+
+    result
 }
 
 fn main() {
     let _r1_t = part1(&Source::TEST);
-    let _r1_p = part1(&Source::PUZZLE);
+    // let _r1_p = part1(&Source::PUZZLE);
 
     // let _r2_t = part2(&Source::TEST);
     // let _r2_p = part2(&Source::PUZZLE);
@@ -152,6 +206,6 @@ mod tests {
 
     #[test]
     fn part2_test() {
-        assert_eq!(part2(&Source::TEST), 3263827)
+        assert_eq!(part2(&Source::TEST), 40)
     }
 }
